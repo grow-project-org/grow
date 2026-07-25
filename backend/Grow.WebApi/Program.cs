@@ -1,6 +1,9 @@
 using Grow.Cqrs;
+using Grow.Domain;
+using Grow.Infrastructure.Database;
 using Grow.WebApi.Endpoints;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -21,12 +24,18 @@ builder.Services.AddOpenApi();
 builder.Services.RegisterCqrs();
 
 builder.Services.AddValidation();
-builder.Services.AddHealthChecks();
 
 builder.Services.AddMemoryCache(options =>
 {
     options.ExpirationScanFrequency = TimeSpan.FromMinutes(5);
 });
+
+var postgresConnectionString = $"Host=localhost;Username=postgres;Database=postgres";
+builder.Services.AddDbContextFactory<DatabaseContext>(options =>
+    options.UseNpgsql(postgresConnectionString));
+
+
+builder.Services.AddHealthChecks().AddDbContextCheck<DatabaseContext>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(opts =>
@@ -75,7 +84,7 @@ app.MapHealthChecks("/hc", new HealthCheckOptions()
             JsonSerializer.Serialize(response, new JsonSerializerOptions
             {
                 WriteIndented = true,
-                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             }));
     }
 });

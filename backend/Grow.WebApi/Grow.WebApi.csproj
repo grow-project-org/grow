@@ -8,12 +8,14 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.10" />
     <PackageReference Include="Microsoft.OpenApi" Version="2.7.5" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Grow.Cqrs\Grow.Cqrs.csproj" />
     <ProjectReference Include="..\Grow.Domain\Grow.Domain.csproj" />
+    <ProjectReference Include="..\Grow.Infrastructure\Grow.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
