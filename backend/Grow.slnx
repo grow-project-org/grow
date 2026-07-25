@@ -1,3 +1,9 @@
 <Solution>
+  <Folder Name="/SolutionItems/">
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+  </Folder>
+  <Project Path="Grow.Cqrs/Grow.Cqrs.csproj" Id="daeed4b6-85d5-4994-994a-d00e9dc750ac" />
+  <Project Path="Grow.Domain/Grow.Domain.csproj" Id="5b1cf383-3c0f-4ad2-8206-e454f14cb15b" />
   <Project Path="Grow.WebApi/Grow.WebApi.csproj" Id="dfaf880c-3ab0-4192-b40d-fb4be1d97aec" />
 </Solution>
