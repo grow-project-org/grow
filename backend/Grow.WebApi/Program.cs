@@ -30,7 +30,8 @@ builder.Services.AddMemoryCache(options =>
     options.ExpirationScanFrequency = TimeSpan.FromMinutes(5);
 });
 
-var postgresConnectionString = $"Host=localhost;Username=postgres;Database=postgres";
+var postgresConnectionString = builder.Configuration.GetConnectionString("Postgres")
+    ?? throw new InvalidOperationException("Missing ConnectionStrings:Postgres configuration.");
 builder.Services.AddDbContextFactory<DatabaseContext>(options =>
     options.UseNpgsql(postgresConnectionString));
 

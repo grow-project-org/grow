@@ -4,15 +4,21 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Grow.Infrastructure.Database;
 
-public class DatabaseContext : DbContext, IDatabaseContext
+public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbContext(options), IDatabaseContext
 {
     public DbSet<Plant> Plants { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder options)
-        => options.UseNpgsql($"Host=localhost;Username=postgres;Database=postgres");
-
     protected override void OnModelCreating(ModelBuilder builder)
     {
-
+        builder.Entity<Plant>(entity =>
+        {
+            entity.ToTable("Plants");
+            entity.HasKey(p => p.Id);
+            entity.Property(p => p.Id).ValueGeneratedNever();
+            entity.Property(p => p.CustomId).IsRequired().HasMaxLength(100);
+            entity.Property(p => p.SpecieId).IsRequired();
+            entity.Property(p => p.CreatedAt).IsRequired();
+            entity.Property(p => p.UpdatedAt).IsRequired();
+        });
     }
 }
