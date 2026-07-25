@@ -21,6 +21,7 @@ builder.Services.AddOpenApi();
 builder.Services.RegisterCqrs();
 
 builder.Services.AddValidation();
+builder.Services.AddHealthChecks();
 
 builder.Services.AddMemoryCache(options =>
 {
