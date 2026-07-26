@@ -1,26 +1,30 @@
+import { useState } from 'react';
 import { Form, Formik, useFormikContext } from 'formik';
 import * as Yup from 'yup';
 import { useNavigate } from 'react-router-dom';
 import { useGarden } from '../../state/GardenContext';
+import { useToast } from '../../state/ToastContext';
 import { MAX_BULK_ADD } from '../../config';
 import { clamp, parseDecimal } from '../../utils/number';
+import { codeTaken } from '../../domain/ids';
 import { ROUTES } from '../../routes/paths';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { TextField } from '../../components/form/TextField';
 import { Button } from '../../components/ui/Button';
+import { PlusIcon } from '../../components/ui/icons';
+import { AddSpeciesSheet } from './AddSpeciesSheet';
 import styles from './AddPlantPage.module.css';
 
 interface AddValues {
-  name: string;
   species: string;
   qty: number;
-  loc: string;
   potL: string;
   groups: string[];
+  code: string;
 }
 
 const schema = Yup.object({
-  name: Yup.string().trim().required('Podaj nazwę'),
+  species: Yup.string().trim().required('Wybierz gatunek'),
   qty: Yup.number().required().integer().min(1).max(MAX_BULK_ADD),
   potL: Yup.string().test('potL', 'Podaj poprawną objętość', (raw) => {
     if (!raw || !raw.trim()) return true;
@@ -31,11 +35,12 @@ const schema = Yup.object({
 
 const QTY_CHIPS = [1, 5, 10, 20] as const;
 
-const INITIAL: AddValues = { name: '', species: '', qty: 1, loc: '', potL: '', groups: [] };
+const INITIAL: AddValues = { species: '', qty: 1, potL: '', groups: [], code: '' };
 
 export const AddPlantPage = () => {
   const navigate = useNavigate();
-  const { addPlants } = useGarden();
+  const garden = useGarden();
+  const { flash } = useToast();
 
   return (
     <div className={styles.page}>
@@ -44,7 +49,7 @@ export const AddPlantPage = () => {
       <div className={styles.tip}>
         <span className={styles.tipIcon}>🌿</span>
         <p className={styles.tipText}>
-          Wystarczy nazwa. Resztę uzupełnisz kiedykolwiek — apka działa też, gdy nie pamiętasz
+          Wybierz gatunek — resztę uzupełnisz kiedykolwiek. Apka działa też, gdy nie pamiętasz
           historii.
         </p>
       </div>
@@ -52,24 +57,32 @@ export const AddPlantPage = () => {
       <Formik<AddValues>
         initialValues={INITIAL}
         validationSchema={schema}
-        onSubmit={(values) => {
-          addPlants({
-            name: values.name.trim(),
-            species: values.species.trim() || null,
-            qty: clamp(values.qty, 1, MAX_BULK_ADD),
-            loc: values.loc.trim() || null,
+        onSubmit={(values, helpers) => {
+          const qty = clamp(values.qty, 1, MAX_BULK_ADD);
+          const code = qty === 1 ? values.code.trim() : '';
+          if (code && codeTaken(garden.garden, code)) {
+            helpers.setFieldError('code', 'Ten kod jest już zajęty');
+            flash('⚠️ Ten kod jest już zajęty');
+            return;
+          }
+          garden.addPlants({
+            species: values.species,
+            qty,
             potL: parseDecimal(values.potL),
             groups: values.groups,
+            code: code || null,
           });
           navigate(ROUTES.plants);
         }}
       >
         <Form>
-          <TextField name="name" label="Nazwa" requiredMark placeholder="np. Monstera z salonu" />
-          <TextField name="species" label="Gatunek" optional placeholder="np. Pomidor, Bazylia…" />
+          <SpeciesPicker />
 
           <QuantityField />
-          <TextField name="loc" label="Lokalizacja" optional placeholder="np. Balkon, Parapet…" />
+
+          {/* A manual code is a permanent physical pot label — only meaningful for a single plant. */}
+          <CodeFieldIfSingle />
+
           <TextField
             name="potL"
             label="Objętość doniczki w litrach"
@@ -87,6 +100,47 @@ export const AddPlantPage = () => {
   );
 };
 
+const SpeciesPicker = () => {
+  const { species, addSpecies } = useGarden();
+  const { values, setFieldValue, errors, touched } = useFormikContext<AddValues>();
+  const [addingSpecies, setAddingSpecies] = useState(false);
+
+  return (
+    <div className={styles.groupBlock}>
+      <span className={styles.label}>
+        Gatunek <span className={styles.required}>•</span>
+      </span>
+      <div className={styles.groupChips}>
+        {species.map((s) => (
+          <button
+            key={s.name}
+            type="button"
+            className={`${styles.groupChip} ${values.species === s.name ? styles.groupChipActive : ''}`}
+            onClick={() => setFieldValue('species', s.name)}
+          >
+            {s.emoji} {s.name}
+          </button>
+        ))}
+        <button type="button" className={styles.groupChip} onClick={() => setAddingSpecies(true)}>
+          <PlusIcon size={14} /> Nowy gatunek
+        </button>
+      </div>
+      {touched.species && errors.species && <p className={styles.error}>{errors.species}</p>}
+
+      <AddSpeciesSheet
+        open={addingSpecies}
+        onClose={() => setAddingSpecies(false)}
+        existingNames={species.map((s) => s.name)}
+        onCreate={(name, emoji, w, f) => {
+          addSpecies(name, emoji, w, f);
+          setFieldValue('species', name);
+          setAddingSpecies(false);
+        }}
+      />
+    </div>
+  );
+};
+
 const QuantityField = () => {
   const { values, setFieldValue } = useFormikContext<AddValues>();
   const setQty = (n: number) => setFieldValue('qty', clamp(n, 1, MAX_BULK_ADD));
@@ -95,8 +149,8 @@ const QuantityField = () => {
     <div className={styles.qtyBlock}>
       <span className={styles.label}>Ile sztuk?</span>
       <p className={styles.hint}>
-        Każda sztuka to osobna instancja z własnym ID (np. PAP-01) i historią — pojemniki i daty
-        ustawisz później indywidualnie.
+        Każda sztuka to osobna instancja z własnym, trwałym kodem (np. PAP-01) i historią —
+        pojemniki i grupy ustawisz później indywidualnie.
       </p>
       <div className={styles.stepper}>
         <button type="button" className={styles.stepBtn} onClick={() => setQty(values.qty - 1)}>
@@ -131,6 +185,20 @@ const QuantityField = () => {
   );
 };
 
+const CodeFieldIfSingle = () => {
+  const { values } = useFormikContext<AddValues>();
+  if (values.qty !== 1) return null;
+  return (
+    <TextField
+      name="code"
+      label="Kod (opcjonalnie)"
+      optional
+      placeholder="np. PJ03 — zostaw puste, by wygenerować"
+      hint="Kod jest trwałą etykietą doniczki — nie da się go później zmienić."
+    />
+  );
+};
+
 const GroupPicker = () => {
   const { groups } = useGarden();
   const { values, setFieldValue } = useFormikContext<AddValues>();
@@ -145,7 +213,7 @@ const GroupPicker = () => {
   return (
     <div className={styles.groupBlock}>
       <span className={styles.label}>
-        Dodaj do grup <span className={styles.optional}>opcjonalnie</span>
+        Dodaj do regionów / grup <span className={styles.optional}>opcjonalnie</span>
       </span>
       <div className={styles.groupChips}>
         {groups.map((g) => {
@@ -169,7 +237,7 @@ const GroupPicker = () => {
 const SubmitButton = () => {
   const { values } = useFormikContext<AddValues>();
   return (
-    <Button type="submit" block disabled={!values.name.trim()} className={styles.save}>
+    <Button type="submit" block disabled={!values.species.trim()} className={styles.save}>
       Dodaj roślinę
     </Button>
   );

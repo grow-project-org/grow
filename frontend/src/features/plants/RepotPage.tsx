@@ -12,13 +12,9 @@ import { Avatar } from '../../components/ui/Avatar';
 import { avatarBg } from '../../domain/species';
 import styles from './RepotPage.module.css';
 
-const MATERIALS = ['plastik', 'ceramika', 'terakota'] as const;
-type Material = (typeof MATERIALS)[number];
-
 interface RepotValues {
   potL: string;
   potCm: string;
-  material: Material;
 }
 
 const schema = Yup.object({
@@ -44,7 +40,7 @@ export const RepotPage = () => {
       <div className={styles.summary}>
         <Avatar emoji={plant.emoji} bg={avatarBg(plant.id)} size={56} radius={16} fontSize={28} />
         <div>
-          <div className={styles.summaryName}>{plant.name}</div>
+          <div className={styles.summaryName}>{plant.species ?? 'Roślina bez gatunku'} · {plant.code}</div>
           <div className={styles.summaryPot}>Obecnie: {potLabel}</div>
         </div>
       </div>
@@ -53,10 +49,10 @@ export const RepotPage = () => {
       <p className={styles.sectionHint}>Oba pola opcjonalne — podaj tyle, ile wiesz.</p>
 
       <Formik<RepotValues>
-        initialValues={{ potL: '', potCm: '', material: 'plastik' }}
+        initialValues={{ potL: '', potCm: '' }}
         validationSchema={schema}
         onSubmit={(values) => {
-          repot(plant.id, parseDecimal(values.potL), parseDecimal(values.potCm), `🪴 Przesadzono ${plant.name}`);
+          repot(plant.id, parseDecimal(values.potL), parseDecimal(values.potCm), `🪴 Przesadzono ${plant.code}`);
           navigate(-1);
         }}
       >
@@ -70,7 +66,6 @@ export const RepotPage = () => {
             </div>
           </div>
 
-          <MaterialPicker />
           <RepotHint plant={plant} />
 
           <Button type="submit" block className={styles.save}>
@@ -78,27 +73,6 @@ export const RepotPage = () => {
           </Button>
         </Form>
       </Formik>
-    </div>
-  );
-};
-
-const MaterialPicker = () => {
-  const { values, setFieldValue } = useFormikContext<RepotValues>();
-  return (
-    <div className={styles.material}>
-      <span className={styles.materialLabel}>Materiał (opcjonalnie)</span>
-      <div className={styles.materialRow}>
-        {MATERIALS.map((mat) => (
-          <button
-            key={mat}
-            type="button"
-            className={`${styles.materialBtn} ${values.material === mat ? styles.materialActive : ''}`}
-            onClick={() => setFieldValue('material', mat)}
-          >
-            {mat.charAt(0).toUpperCase() + mat.slice(1)}
-          </button>
-        ))}
-      </div>
     </div>
   );
 };

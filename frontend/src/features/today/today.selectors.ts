@@ -1,7 +1,8 @@
-import type { ActionType, Plant } from '../../types';
+import type { ActionType, Group, Plant, Species } from '../../types';
 import { TODAY } from '../../config';
 import { diffDays } from '../../utils/date';
 import { avatarBg } from '../../domain/species';
+import { regionLabel } from '../../domain/regions';
 import {
   dueDate,
   isDoneToday,
@@ -37,21 +38,27 @@ const SECTION_META: Record<ActionType, { emoji: string; title: string }> = {
   fert: { emoji: '🌱', title: 'Nawożenie' },
 };
 
-const buildRows = (garden: Plant[], done: DoneMap, type: ActionType): TodayRow[] =>
+const buildRows = (
+  species: readonly Species[],
+  groups: readonly Group[],
+  garden: readonly Plant[],
+  done: DoneMap,
+  type: ActionType,
+): TodayRow[] =>
   garden
     .filter((p) => {
-      const due = dueDate(p, type);
+      const due = dueDate(species, p, type);
       return due != null && diffDays(due, TODAY) <= 0;
     })
     .map((p) => {
-      const due = dueDate(p, type) as string;
+      const due = dueDate(species, p, type) as string;
       const isDone = isDoneToday(done, p.id, type);
       const overdue = diffDays(due, TODAY) < 0;
-      const parts = [p.code, p.loc ?? '—'].filter(Boolean).join(' · ');
+      const parts = [p.code, regionLabel(p, groups)].filter(Boolean).join(' · ');
       const sub = overdue ? `${parts} · ${relLabel(due).text}` : parts;
       return {
         id: p.id,
-        name: p.name,
+        name: p.species ?? 'Roślina',
         emoji: p.emoji,
         avatarBg: avatarBg(p.id),
         sub,
@@ -61,12 +68,17 @@ const buildRows = (garden: Plant[], done: DoneMap, type: ActionType): TodayRow[]
     });
 
 /** Build the "Dziś" screen model: due sections and the outstanding count. */
-export const selectToday = (garden: Plant[], done: DoneMap): TodayView => {
+export const selectToday = (
+  species: readonly Species[],
+  groups: readonly Group[],
+  garden: readonly Plant[],
+  done: DoneMap,
+): TodayView => {
   const sections: TodaySection[] = [];
   let left = 0;
 
   (['water', 'fert'] as const).forEach((type) => {
-    const rows = buildRows(garden, done, type);
+    const rows = buildRows(species, groups, garden, done, type);
     if (!rows.length) return;
     sections.push({ type, ...SECTION_META[type], rows });
     left += rows.filter((r) => !r.done).length;

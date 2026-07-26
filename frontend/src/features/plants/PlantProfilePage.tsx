@@ -8,30 +8,32 @@ import { ROUTES, repotPath } from '../../routes/paths';
 import { IconButton } from '../../components/ui/IconButton';
 import { ChevronLeftIcon, MoreVerticalIcon } from '../../components/ui/icons';
 import { ActionGridSheet } from '../../components/sheet/ActionGridSheet';
-import { RenameSheet } from '../../components/sheet/RenameSheet';
+import { HarvestSheet } from '../../components/sheet/HarvestSheet';
+import { CustomEventSheet } from '../../components/sheet/CustomEventSheet';
 import { selectProfile } from './profile.selectors';
 import styles from './PlantProfilePage.module.css';
 
-type OpenSheet = 'actions' | 'rename' | null;
+type OpenSheet = 'actions' | 'harvest' | 'custom' | null;
 
 export const PlantProfilePage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { plantById, groups, log, commitAction, logExtra, rename } = useGarden();
+  const { plantById, groups, log, species, commitAction, logExtra } = useGarden();
   const { flash } = useToast();
   const [sheet, setSheet] = useState<OpenSheet>(null);
 
   const plant = plantById(Number(id));
   if (!plant) return <Navigate to={ROUTES.plants} replace />;
 
-  const view = selectProfile(plant, log, groups);
+  const view = selectProfile(species, plant, log, groups);
+  const displayName = plant.species ?? 'Roślina bez gatunku';
 
   const onFertilise = () => {
-    if (interval(plant.species, 'fert') == null) {
+    if (interval(species, plant.species, 'fert') == null) {
       flash('Ten gatunek nie ma ustawionego nawożenia');
       return;
     }
-    commitAction([plant.id], 'fert', `🌱 Nawożono ${plant.name}`);
+    commitAction([plant.id], 'fert', `🌱 Nawożono ${plant.code}`);
   };
 
   return (
@@ -48,14 +50,10 @@ export const PlantProfilePage = () => {
       </div>
 
       <div className={styles.body}>
-        <h1 className={styles.name}>{plant.name}</h1>
-        <p className={styles.meta}>
-          {(plant.species ?? 'gatunek nieznany')} · {(plant.loc ?? 'brak lokalizacji')}
-        </p>
+        <h1 className={styles.name}>{displayName}</h1>
+        <p className={styles.meta}>{view.region}</p>
 
-        <button type="button" className={styles.codeBtn} onClick={() => setSheet('rename')}>
-          {plant.code} <span className={styles.codeEdit}>✏️</span>
-        </button>
+        <div className={styles.codeBtn}>{plant.code}</div>
 
         <div className={styles.tags}>
           {view.groups.map((g) => (
@@ -66,7 +64,7 @@ export const PlantProfilePage = () => {
         </div>
 
         <div className={styles.quick}>
-          <button type="button" className={`${styles.quickBtn} ${styles.quickWater}`} onClick={() => commitAction([plant.id], 'water', `💧 Podlano ${plant.name}`)}>
+          <button type="button" className={`${styles.quickBtn} ${styles.quickWater}`} onClick={() => commitAction([plant.id], 'water', `💧 Podlano ${plant.code}`)}>
             <span className={styles.quickEmoji}>💧</span>Podlej
           </button>
           <button type="button" className={`${styles.quickBtn} ${styles.quickFert}`} onClick={onFertilise}>
@@ -132,23 +130,39 @@ export const PlantProfilePage = () => {
         open={sheet === 'actions'}
         onClose={() => setSheet(null)}
         kicker={`Roślina · ${plant.code}`}
-        title={plant.name}
+        title={displayName}
         actions={EXTRA_ACTIONS.map((a) => ({
           emoji: a.emoji,
           label: a.label,
           onClick: () => {
-            logExtra(plant.id, a.kind, `${a.emoji} ${a.label} · ${plant.name}`);
+            if (a.kind === 'harvest') {
+              setSheet('harvest');
+              return;
+            }
+            if (a.kind === 'custom') {
+              setSheet('custom');
+              return;
+            }
+            logExtra([plant.id], a.kind, `${a.emoji} ${a.label} · ${plant.code}`);
             setSheet(null);
           },
         }))}
       />
 
-      <RenameSheet
-        open={sheet === 'rename'}
+      <HarvestSheet
+        open={sheet === 'harvest'}
         onClose={() => setSheet(null)}
-        initial={plant.code}
-        onSave={(label) => {
-          rename(plant.id, label, `✏️ Etykieta: ${label}`);
+        onSave={(qty, weight) => {
+          logExtra([plant.id], 'harvest', `🧺 Zbiór · ${plant.code}`, { qty, weight });
+          setSheet(null);
+        }}
+      />
+
+      <CustomEventSheet
+        open={sheet === 'custom'}
+        onClose={() => setSheet(null)}
+        onSave={(note) => {
+          logExtra([plant.id], 'custom', `📝 ${note} · ${plant.code}`, { note });
           setSheet(null);
         }}
       />

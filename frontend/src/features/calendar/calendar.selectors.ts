@@ -1,7 +1,8 @@
-import type { Plant } from '../../types';
+import type { Group, Plant, Species } from '../../types';
 import { TODAY } from '../../config';
 import { diffDays, fmtLong, weekdayMondayFirst } from '../../utils/date';
 import { dueDate, relLabel } from '../../domain/schedule';
+import { regionLabel } from '../../domain/regions';
 
 const YEAR = 2026;
 const MONTH_INDEX = 6; // July (0-based)
@@ -35,11 +36,11 @@ export interface CalendarView {
 
 type DayEvents = Map<string, Array<{ plant: Plant; type: 'water' | 'fert' }>>;
 
-const buildEventMap = (garden: Plant[]): DayEvents => {
+const buildEventMap = (species: readonly Species[], garden: readonly Plant[]): DayEvents => {
   const map: DayEvents = new Map();
   for (const plant of garden) {
     for (const type of ['water', 'fert'] as const) {
-      let due = dueDate(plant, type);
+      let due = dueDate(species, plant, type);
       if (!due) continue;
       if (diffDays(due, TODAY) < 0) due = TODAY; // roll overdue onto today
       if (due.slice(0, 7) !== MONTH_PREFIX) continue;
@@ -51,8 +52,13 @@ const buildEventMap = (garden: Plant[]): DayEvents => {
   return map;
 };
 
-export const selectCalendar = (garden: Plant[], selected: string): CalendarView => {
-  const events = buildEventMap(garden);
+export const selectCalendar = (
+  species: readonly Species[],
+  groups: readonly Group[],
+  garden: readonly Plant[],
+  selected: string,
+): CalendarView => {
+  const events = buildEventMap(species, garden);
   const firstOfMonth = new Date(Date.UTC(YEAR, MONTH_INDEX, 1));
   const daysInMonth = new Date(Date.UTC(YEAR, MONTH_INDEX + 1, 0)).getUTCDate();
 
@@ -64,9 +70,9 @@ export const selectCalendar = (garden: Plant[], selected: string): CalendarView 
 
   const selectedEvents: CalEvent[] = (events.get(selected) ?? []).map(({ plant, type }) => ({
     id: plant.id,
-    name: plant.name,
+    name: plant.species ?? 'Roślina',
     emoji: plant.emoji,
-    loc: plant.loc ?? '—',
+    loc: regionLabel(plant, groups),
     action: type === 'water' ? 'Podlewanie' : 'Nawożenie',
     bg: type === 'water' ? 'var(--color-water-bg)' : 'var(--color-fert-bg)',
   }));

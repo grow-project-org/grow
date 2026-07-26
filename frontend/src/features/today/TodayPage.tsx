@@ -9,9 +9,9 @@ import { selectToday, type TodayRow } from './today.selectors';
 import styles from './TodayPage.module.css';
 
 export const TodayPage = () => {
-  const { garden, done, toggleToday } = useGarden();
+  const { species, groups, garden, done, toggleToday } = useGarden();
   const navigate = useNavigate();
-  const { sections, left, allDone } = selectToday(garden, done);
+  const { sections, left, allDone } = selectToday(species, groups, garden, done);
 
   return (
     <div className={styles.page}>

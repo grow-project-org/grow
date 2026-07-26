@@ -36,6 +36,17 @@
   font-weight: 600;
 }
 
+.required {
+  color: var(--color-green);
+}
+
+.error {
+  margin: 6px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-overdue-ink);
+}
+
 .hint {
   margin: 2px 0 7px;
   font-size: 12px;

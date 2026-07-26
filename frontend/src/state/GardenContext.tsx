@@ -8,13 +8,14 @@ import {
   useRef,
   type ReactNode,
 } from 'react';
-import type { ActionType, GroupType, LogType, Plant } from '../types';
-import { gardenReducer, type AddPlantsInput, type GardenState } from './gardenReducer';
+import type { ActionType, GroupType, LogType } from '../types';
+import { gardenReducer, type AddPlantsInput, type GardenState, type LogExtraData } from './gardenReducer';
 import { doneKey } from '../domain/schedule';
 import { buildSeed } from '../data/seed';
 import { loadSnapshot, saveSnapshot } from './persistence';
 import { useGardenSync } from '../hooks/useGardenSync';
 import { useToast } from './ToastContext';
+import type { Plant } from '../types';
 
 /**
  * The public API pages depend on — a small, intention-revealing surface that
@@ -27,11 +28,11 @@ export interface GardenApi extends GardenState {
   commitAction: (ids: number[], type: ActionType, message?: string) => void;
   /** Toggle a single plant's "done today" state (check / uncheck). */
   toggleToday: (id: number, type: ActionType) => void;
-  /** Record a non-scheduled event (pruning, harvest, …) in a plant's history. */
-  logExtra: (id: number, type: LogType, message: string) => void;
+  /** Record a one-off event (pruning, harvest, a custom note…) for one or more plants. */
+  logExtra: (ids: number[], type: LogType, message: string, data?: LogExtraData) => void;
   repot: (id: number, potL: number | null, potCm: number | null, message: string) => void;
-  rename: (id: number, code: string, message: string) => void;
   addPlants: (input: AddPlantsInput) => void;
+  addSpecies: (name: string, emoji: string, w: number | null, f: number | null) => void;
   toggleGroupMember: (id: number, group: string) => void;
   addGroup: (name: string, type: GroupType, message: string) => void;
   dismissWarning: (group: string) => void;
@@ -98,8 +99,9 @@ export const GardenProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const logExtra = useCallback(
-    (id: number, type: LogType, message: string) => {
-      dispatch({ kind: 'LOG_EXTRA', id, type });
+    (ids: number[], type: LogType, message: string, data?: LogExtraData) => {
+      if (!ids.length) return;
+      dispatch({ kind: 'LOG_EXTRA', ids, type, data });
       flash(message);
     },
     [flash],
@@ -113,22 +115,22 @@ export const GardenProvider = ({ children }: { children: ReactNode }) => {
     [flash],
   );
 
-  const rename = useCallback(
-    (id: number, code: string, message: string) => {
-      dispatch({ kind: 'RENAME', id, code });
-      flash(message);
-    },
-    [flash],
-  );
-
   const addPlants = useCallback(
     (input: AddPlantsInput) => {
       dispatch({ kind: 'ADD_PLANTS', input });
       const message =
         input.qty > 1
-          ? `🌱 Dodano ${input.qty} szt. „${input.name}”`
-          : `🌱 Dodano „${input.name}”`;
+          ? `🌱 Dodano ${input.qty} szt. „${input.species}”`
+          : `🌱 Dodano „${input.species}”`;
       flash(message);
+    },
+    [flash],
+  );
+
+  const addSpecies = useCallback(
+    (name: string, emoji: string, w: number | null, f: number | null) => {
+      dispatch({ kind: 'ADD_SPECIES', name, emoji, w, f });
+      flash(`🌱 Dodano gatunek „${name}”`);
     },
     [flash],
   );
@@ -157,8 +159,8 @@ export const GardenProvider = ({ children }: { children: ReactNode }) => {
       toggleToday,
       logExtra,
       repot,
-      rename,
       addPlants,
+      addSpecies,
       toggleGroupMember,
       addGroup,
       dismissWarning,
@@ -171,8 +173,8 @@ export const GardenProvider = ({ children }: { children: ReactNode }) => {
       toggleToday,
       logExtra,
       repot,
-      rename,
       addPlants,
+      addSpecies,
       toggleGroupMember,
       addGroup,
       dismissWarning,
