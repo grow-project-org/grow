@@ -1,0 +1,79 @@
+.wrap {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 92px;
+  z-index: 40;
+  pointer-events: none;
+}
+
+.popup {
+  display: flex;
+  gap: 11px;
+  padding: 13px 14px;
+  background: var(--color-warn-bg);
+  border: 2.5px solid var(--color-warn-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 26px -10px rgba(0, 0, 0, 0.45);
+  pointer-events: auto;
+}
+
+.icon {
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-warn-ink);
+}
+
+.message {
+  font-size: 12px;
+  font-weight: 600;
+  color: #9a7030;
+  margin-top: 1px;
+}
+
+.note {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-muted);
+  line-height: 1.35;
+  margin-top: 6px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.retry {
+  padding: 7px 12px;
+  border: var(--border-thin);
+  border-radius: var(--radius-pill);
+  background: var(--color-ink);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dismiss {
+  padding: 7px 12px;
+  border: var(--border-thin);
+  border-color: var(--color-warn-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-card);
+  color: var(--color-warn-ink);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}

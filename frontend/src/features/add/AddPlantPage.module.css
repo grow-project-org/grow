@@ -1,0 +1,140 @@
+.page {
+  padding: 12px 20px 24px;
+}
+
+.tip {
+  display: flex;
+  gap: 9px;
+  margin-bottom: 16px;
+  padding: 12px 13px;
+  background: var(--color-green-tint);
+  border: 2.5px solid var(--color-green);
+  border-radius: var(--radius);
+}
+
+.tipIcon {
+  font-size: 18px;
+}
+
+.tipText {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-green-dark);
+  line-height: 1.4;
+}
+
+.label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-ink-soft);
+}
+
+.optional {
+  color: var(--color-faint);
+  font-weight: 600;
+}
+
+.hint {
+  margin: 2px 0 7px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-muted);
+  line-height: 1.35;
+}
+
+.qtyBlock {
+  margin-bottom: 14px;
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.stepBtn {
+  width: 46px;
+  height: 46px;
+  flex: none;
+  border: var(--border);
+  border-radius: var(--radius);
+  background: var(--color-card);
+  box-shadow: var(--shadow-soft);
+  font-size: 24px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.stepInput {
+  width: 74px;
+  text-align: center;
+  padding: 12px 6px;
+  border: var(--border);
+  border-radius: var(--radius);
+  background: var(--color-card);
+  font-size: 20px;
+  font-weight: 700;
+  outline: none;
+}
+
+.chips {
+  display: flex;
+  gap: 8px;
+}
+
+.chip {
+  padding: 7px 14px;
+  border: var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--color-card);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-soft);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chipActive {
+  background: var(--color-green);
+  color: #fff;
+  box-shadow: var(--shadow-green);
+}
+
+.groupBlock {
+  margin-top: 4px;
+}
+
+.groupChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 7px;
+}
+
+.groupChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px;
+  border: var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--color-card);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-soft);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.groupChipActive {
+  background: var(--color-green);
+  color: #fff;
+  box-shadow: var(--shadow-green);
+}
+
+.save {
+  margin-top: 20px;
+}

@@ -1,0 +1,11 @@
+.card {
+  background: var(--color-card);
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.raised {
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card-lg);
+}

@@ -1,0 +1,56 @@
+.field {
+  margin-bottom: 14px;
+}
+
+.label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-ink-soft);
+}
+
+.required {
+  color: var(--color-green);
+}
+
+.optional {
+  color: var(--color-faint);
+  font-weight: 600;
+}
+
+.hint {
+  margin: 2px 0 7px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-muted);
+  line-height: 1.35;
+}
+
+.input {
+  width: 100%;
+  margin-top: 5px;
+  padding: 13px 14px;
+  border: var(--border);
+  border-radius: var(--radius);
+  background: var(--color-card);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-ink);
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--color-faint);
+  font-weight: 500;
+}
+
+.inputError {
+  border-color: var(--color-overdue-border);
+}
+
+.error {
+  margin: 6px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-overdue-ink);
+}

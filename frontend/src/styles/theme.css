@@ -1,0 +1,70 @@
+/* Design tokens for the "Kiełek" sticker-style visual language:
+   flat cream ground, thick ink outlines, hard offset shadows, zero softness. */
+:root {
+  /* Surfaces */
+  --color-page: #d8d3ca;
+  --color-surface: #fef5e7;
+  --color-card: #ffffff;
+
+  /* Ink / text */
+  --color-ink: #3a3226;
+  --color-ink-soft: #6b6152;
+  --color-muted: #9a8f7d;
+  --color-faint: #c3b8a5;
+
+  /* Brand green */
+  --color-green: #2fb355;
+  --color-green-dark: #1f8a40;
+  --color-green-tint: #eefbf1;
+  --color-green-tint-border: #bfe6cb;
+
+  /* Neutral accents */
+  --color-chip: #f0e8d8;
+  --color-divider: #e4dccd;
+  --color-shadow: #3a3226;
+  --color-shadow-soft: #d8ccb6;
+
+  /* Water (blue) */
+  --color-water-bg: #d6f0ff;
+  --color-water-ink: #1c5a7a;
+  --color-water-tint: #eef7fd;
+  --color-water-btn: #8fd6ff;
+
+  /* Fertilise (yellow) */
+  --color-fert-bg: #fdf3d0;
+  --color-fert-tint: #fdf7e3;
+  --color-fert-ink: #8a6410;
+  --color-fert-btn: #ffd23f;
+
+  /* Repot (pink) */
+  --color-repot-bg: #ffc0d8;
+  --color-repot-ink: #a03a68;
+
+  /* States */
+  --color-overdue-bg: #ffe4d3;
+  --color-overdue-ink: #c2410c;
+  --color-overdue-border: #e88a4a;
+  --color-ok-tint: #eef7e8;
+  --color-ok-ink: #3f7a3a;
+  --color-warn-bg: #fff4e0;
+  --color-warn-border: #d98a1a;
+  --color-warn-ink: #8a5a10;
+
+  /* Type */
+  --font: 'Fredoka', system-ui, -apple-system, sans-serif;
+
+  /* Radii */
+  --radius-sm: 9px;
+  --radius: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-pill: 100px;
+
+  /* Lines & shadows */
+  --border: 2.5px solid var(--color-ink);
+  --border-thin: 2px solid var(--color-ink);
+  --shadow-card: 3px 4px 0 var(--color-shadow);
+  --shadow-card-lg: 4px 5px 0 var(--color-shadow);
+  --shadow-soft: 2px 3px 0 var(--color-shadow-soft);
+  --shadow-green: 2px 3px 0 var(--color-green-dark);
+}
