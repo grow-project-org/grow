@@ -13,7 +13,7 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
         policy
-            .WithOrigins(["http://localhost:3000"])
+            .WithOrigins(["http://localhost:5173"])
             .WithMethods("GET", "POST")
             .WithHeaders("Content-Type", "X-CSRF-TOKEN")
             .AllowCredentials()

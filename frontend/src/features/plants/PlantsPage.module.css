@@ -1,0 +1,221 @@
+.page {
+  padding: 12px 20px 24px;
+}
+
+.heading {
+  margin: 0 0 12px;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.stats {
+  display: flex;
+  gap: 9px;
+  margin-bottom: 14px;
+}
+
+.stat {
+  flex: 1;
+  padding: 12px;
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  text-align: left;
+  color: var(--color-ink);
+}
+
+.statActive {
+  box-shadow: inset 3px 3px 0 rgba(58, 50, 38, 0.22);
+}
+
+.statValue {
+  display: block;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.statLabel {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.search {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.searchInput {
+  width: 100%;
+  padding: 12px 14px 12px 40px;
+  border: var(--border);
+  border-radius: var(--radius);
+  background: var(--color-card);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-ink);
+  outline: none;
+}
+
+.filterLabel {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-muted);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.card {
+  background: var(--color-card);
+  border: var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.cardHead {
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+}
+
+.cardText {
+  flex: 1;
+  min-width: 0;
+}
+
+.cardName {
+  display: block;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.cardSub {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-muted);
+}
+
+.badges {
+  display: flex;
+  gap: 5px;
+  flex: none;
+}
+
+.badgeWater,
+.badgeFert {
+  font-size: 11px;
+  font-weight: 700;
+  border: 1.5px solid var(--color-ink);
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+}
+
+.badgeWater {
+  color: var(--color-water-ink);
+  background: var(--color-water-bg);
+}
+
+.badgeFert {
+  color: var(--color-fert-ink);
+  background: var(--color-fert-bg);
+}
+
+.instances {
+  list-style: none;
+  margin: 0;
+  padding: 8px 13px 12px;
+  border-top: 2px dashed var(--color-divider);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.instance {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 7px 6px;
+  border: none;
+  border-radius: 12px;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+}
+
+.instanceText {
+  flex: 1;
+  min-width: 0;
+}
+
+.instanceCode {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.instanceLoc {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-muted);
+}
+
+.instanceNext {
+  flex: none;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1.5px solid var(--color-ink);
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+}
+
+.chevron {
+  flex: none;
+  color: var(--color-faint);
+}
+
+.emptyState {
+  text-align: center;
+  padding: 36px 20px;
+  color: var(--color-muted);
+}
+
+.emptyEmoji {
+  font-size: 40px;
+}
+
+.emptyText {
+  margin: 6px 0 0;
+  font-size: 15px;
+  font-weight: 600;
+}

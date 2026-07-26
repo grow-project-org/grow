@@ -1,0 +1,35 @@
+.nav {
+  flex: none;
+  display: flex;
+  align-items: stretch;
+  padding: 8px 8px 20px;
+  background: var(--color-card);
+  border-top: var(--border);
+}
+
+.item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 7px 0;
+  color: var(--color-faint);
+  opacity: 0.9;
+  cursor: pointer;
+}
+
+.item.active {
+  color: var(--color-green);
+  opacity: 1;
+}
+
+.emoji {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.label {
+  font-size: 10px;
+  font-weight: 700;
+}

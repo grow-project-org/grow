@@ -1,0 +1,27 @@
+.hard,
+.soft {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: var(--border);
+  border-radius: 12px;
+  background: var(--color-card);
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.hard {
+  box-shadow: var(--shadow-card);
+}
+
+.soft {
+  box-shadow: var(--shadow-soft);
+}
+
+.hard:active,
+.soft:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 2px 0 var(--color-shadow-soft);
+}

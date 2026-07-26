@@ -1,0 +1,46 @@
+.types {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-bottom: 14px;
+}
+
+.type {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px;
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--color-card);
+  box-shadow: var(--shadow-soft);
+  cursor: pointer;
+  text-align: left;
+}
+
+.typeActive {
+  border-color: var(--color-green);
+  background: var(--color-green-tint);
+  box-shadow: 2px 3px 0 var(--color-green-tint-border);
+}
+
+.typeEmoji {
+  font-size: 24px;
+}
+
+.typeText {
+  flex: 1;
+}
+
+.typeLabel {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.typeDesc {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-muted);
+}

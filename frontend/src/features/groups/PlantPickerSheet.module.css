@@ -1,0 +1,92 @@
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.count {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.desc {
+  margin: 2px 0 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-muted);
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 12px;
+  border: var(--border-thin);
+  border-radius: var(--radius);
+  background: var(--color-card);
+  cursor: pointer;
+  text-align: left;
+}
+
+.rowActive {
+  background: #eaf5e4;
+}
+
+.box {
+  position: relative;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: var(--border-thin);
+  border-radius: 8px;
+  background: var(--color-card);
+}
+
+.boxFill {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: var(--color-green);
+  color: #fff;
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+}
+
+.name {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.sub {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-muted);
+}
+
+.done {
+  margin-top: 14px;
+}

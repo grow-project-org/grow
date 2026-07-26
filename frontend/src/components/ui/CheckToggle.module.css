@@ -1,0 +1,22 @@
+.toggle {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: var(--border);
+  background: var(--color-card);
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.fill {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-green);
+  color: #fff;
+}
