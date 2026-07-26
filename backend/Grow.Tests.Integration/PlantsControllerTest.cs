@@ -35,11 +35,7 @@ public class PlantsControllerTest
     [Test]
     public async Task Post_Plants_ShouldReturnPlantId()
     {
-        var newPlantCommand = new
-        {
-            CustomId = "monstera-01",
-            SpecieId = Guid.NewGuid()
-        };
+        var newPlantCommand = new CreatePlantRequest("monstera-01", Guid.NewGuid());
 
         var response = await this._client.PostAsJsonAsync("/api/plants", newPlantCommand);
 
