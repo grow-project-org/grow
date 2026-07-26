@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import type { GroupType } from '../../types';
 import { useGarden } from '../../state/GardenContext';
-import { useToast } from '../../state/ToastContext';
 import { EXTRA_ACTIONS } from '../../domain/extraActions';
 import { CheckIcon, PlusIcon } from '../../components/ui/icons';
 import { IconButton } from '../../components/ui/IconButton';
@@ -21,11 +20,10 @@ type Sheet =
 
 export const GroupsPage = () => {
   const garden = useGarden();
-  const { flash } = useToast();
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [sheet, setSheet] = useState<Sheet>(null);
 
-  const cards = selectGroups(garden.garden, garden.groups, garden.done, garden.dismissed);
+  const cards = selectGroups(garden.species, garden.garden, garden.groups, garden.done, garden.dismissed);
 
   const toggleExpand = (key: string) =>
     setExpanded((cur) => ({ ...cur, [key]: !cur[key] }));
@@ -209,11 +207,15 @@ export const GroupsPage = () => {
         kicker="Akcja dla grupy"
         title={activeGroup ?? ''}
         onAddPlants={() => activeGroup && setSheet({ kind: 'picker', group: activeGroup })}
-        actions={EXTRA_ACTIONS.map((a) => ({
+        actions={EXTRA_ACTIONS.filter((a) => a.kind !== 'custom').map((a) => ({
           emoji: a.emoji,
           label: a.label,
           onClick: () => {
-            flash(`${a.emoji} ${a.label} · ${activeGroup ?? ''}`);
+            if (!activeGroup) return;
+            const memberIds = garden.garden
+              .filter((p) => p.groups.includes(activeGroup))
+              .map((p) => p.id);
+            garden.logExtra(memberIds, a.kind, `${a.emoji} ${a.label} · „${activeGroup}”`);
             setSheet(null);
           },
         }))}

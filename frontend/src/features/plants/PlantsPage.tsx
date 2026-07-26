@@ -20,13 +20,13 @@ interface StatDef {
 }
 
 export const PlantsPage = () => {
-  const { garden, done } = useGarden();
+  const { garden, groups, species, done } = useGarden();
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<PlantsFilter>('all');
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
-  const view = selectPlants(garden, done, query, filter);
+  const view = selectPlants(species, groups, garden, done, query, filter);
 
   const stats: StatDef[] = [
     { key: 'all', emoji: '🌿', label: 'wszystkich', value: view.total, bg: 'var(--color-card)' },
@@ -67,7 +67,7 @@ export const PlantsPage = () => {
           className={styles.searchInput}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Szukaj odmiany lub ID (np. PAP-05)…"
+          placeholder="Szukaj gatunku lub kodu (np. PAP-05)…"
         />
       </div>
 
@@ -128,7 +128,7 @@ const VarietyCard = ({ variety, expanded, onToggle, onOpen }: VarietyCardProps) 
               <Avatar emoji={inst.emoji} bg={inst.avatarBg} size={38} radius={11} fontSize={18} thinBorder />
               <span className={styles.instanceText}>
                 <span className={styles.instanceCode}>{inst.code}</span>
-                <span className={styles.instanceLoc}>{inst.loc}</span>
+                <span className={styles.instanceLoc}>{inst.region}</span>
               </span>
               <span
                 className={styles.instanceNext}

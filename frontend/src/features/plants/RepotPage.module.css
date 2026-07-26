@@ -49,41 +49,6 @@
   flex: 1;
 }
 
-.material {
-  margin-bottom: 4px;
-}
-
-.materialLabel {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--color-ink-soft);
-}
-
-.materialRow {
-  display: flex;
-  gap: 8px;
-  margin-top: 6px;
-}
-
-.materialBtn {
-  flex: 1;
-  padding: 11px 6px;
-  border: var(--border);
-  border-radius: 12px;
-  background: var(--color-card);
-  color: var(--color-ink);
-  box-shadow: var(--shadow-soft);
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.materialActive {
-  background: var(--color-green);
-  color: #fff;
-  box-shadow: var(--shadow-green);
-}
-
 .tip {
   display: flex;
   gap: 9px;

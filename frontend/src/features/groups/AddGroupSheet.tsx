@@ -26,9 +26,9 @@ interface TypeOption {
 }
 
 const TYPE_OPTIONS: readonly TypeOption[] = [
-  { id: 'work', emoji: '⚡', label: 'Robocza', desc: 'Ten sam rytm — akcja od razu na wszystkie' },
-  { id: 'region', emoji: '📍', label: 'Region', desc: 'Obszar ogrodu — statystyki i podgląd' },
-  { id: 'adhoc', emoji: '📌', label: 'Doraźna', desc: 'Tymczasowe zadanie na teraz' },
+  { id: 'work', emoji: '⚡', label: 'Robocza', desc: 'Podobny rytm i lokalizacja — akcja od razu na wszystkie' },
+  { id: 'region', emoji: '📍', label: 'Region', desc: 'Lokalizacja — roślina może mieć ich kilka naraz' },
+  { id: 'adhoc', emoji: '📌', label: 'Tymczasowa', desc: 'Lista do jednorazowej akcji, usuwana ręcznie' },
 ];
 
 const schema = Yup.object({

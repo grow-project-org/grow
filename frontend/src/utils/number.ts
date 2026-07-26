@@ -16,3 +16,18 @@ export const isValidOptionalDecimal = (raw?: string): boolean => {
 /** Clamp a value into an inclusive range. */
 export const clamp = (value: number, min: number, max: number): number =>
   Math.min(max, Math.max(min, value));
+
+/** Parse a user-typed positive integer (e.g. a care interval in days). */
+export const parseOptionalInt = (raw: string): number | null => {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const n = Number(trimmed);
+  return Number.isInteger(n) && n > 0 ? n : null;
+};
+
+/** Valid when empty, or a positive integer. */
+export const isValidOptionalInt = (raw?: string): boolean => {
+  if (!raw || !raw.trim()) return true;
+  const n = Number(raw.trim());
+  return Number.isInteger(n) && n > 0;
+};

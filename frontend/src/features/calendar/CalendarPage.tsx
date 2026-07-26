@@ -9,10 +9,10 @@ import { selectCalendar } from './calendar.selectors';
 import styles from './CalendarPage.module.css';
 
 export const CalendarPage = () => {
-  const { garden } = useGarden();
+  const { species, groups, garden } = useGarden();
   const navigate = useNavigate();
   const [selected, setSelected] = useState(TODAY);
-  const view = selectCalendar(garden, selected);
+  const view = selectCalendar(species, groups, garden, selected);
 
   return (
     <div className={styles.page}>

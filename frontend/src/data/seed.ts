@@ -1,20 +1,27 @@
-import type { Group, LogEntry, Plant } from '../types';
+import type { Group, LogEntry, Plant, Species } from '../types';
 import { TODAY } from '../config';
 import { daysAdd } from '../utils/date';
-import { PREFIX, SPECIES } from '../domain/species';
 import { makeCode } from '../domain/ids';
 
 /**
- * Deterministic seed data. Generates ~72 concrete plant instances across a
- * handful of varieties, with staggered last-care dates so the schedule shows a
- * realistic mix of due / overdue / upcoming plants against {@link TODAY}.
+ * Deterministic seed data: a private species catalogue plus ~72 concrete
+ * plant instances across it, with staggered last-care dates so the schedule
+ * shows a realistic mix of due / overdue / upcoming plants against
+ * {@link TODAY}. Two visually different varieties of the same kind of plant
+ * (e.g. hot vs. sweet pepper) are two separate, flat species — not one
+ * species with a variety name.
  */
 
 interface GardenDef {
-  sp: string;
-  name: string;
+  species: string;
   emoji: string;
-  loc: string;
+  prefix: string;
+  /** Watering interval in days. */
+  w: number;
+  /** Fertilising interval in days, or null if not tracked. */
+  f: number | null;
+  region: string;
+  /** Extra work/temporary groups beyond the region. */
   groups: string[];
   /** Number of instances to create. */
   n: number;
@@ -23,22 +30,22 @@ interface GardenDef {
 }
 
 const GARDEN_DEFS: readonly GardenDef[] = [
-  { sp: 'Papryka', name: 'Papryka Ostra', emoji: '🌶️', loc: 'Szklarnia', groups: ['Szklarnia', 'Papryki'], n: 12, potL: 5, potCm: 20 },
-  { sp: 'Papryka', name: 'Papryka Słodka', emoji: '🌶️', loc: 'Szklarnia', groups: ['Szklarnia', 'Papryki'], n: 8, potL: 5, potCm: 20 },
-  { sp: 'Pomidor', name: 'Pomidor Malinowy', emoji: '🍅', loc: 'Szklarnia', groups: ['Szklarnia', 'Pomidory'], n: 6, potL: 10, potCm: 26 },
-  { sp: 'Pomidor', name: 'Pomidor Koktajl', emoji: '🍅', loc: 'Szklarnia', groups: ['Szklarnia', 'Pomidory'], n: 4, potL: 7, potCm: 24 },
-  { sp: 'Ogórek', name: 'Ogórek Gruntowy', emoji: '🥒', loc: 'Szklarnia', groups: ['Szklarnia'], n: 5, potL: 8, potCm: 24 },
-  { sp: 'Sałata', name: 'Sałata Dębolistna', emoji: '🥬', loc: 'Szklarnia', groups: ['Szklarnia'], n: 6, potL: 2, potCm: 14 },
-  { sp: 'Cukinia', name: 'Cukinia', emoji: '🌿', loc: 'Szklarnia', groups: ['Szklarnia'], n: 3, potL: 12, potCm: 30 },
-  { sp: 'Truskawka', name: 'Truskawka', emoji: '🍓', loc: 'Balkon', groups: ['Balkon', 'Owoce'], n: 8, potL: 3, potCm: 16 },
-  { sp: 'Pelargonia', name: 'Pelargonia', emoji: '🌸', loc: 'Balkon', groups: ['Balkon'], n: 4, potL: 4, potCm: 18 },
-  { sp: 'Surfinia', name: 'Surfinia', emoji: '💐', loc: 'Balkon', groups: ['Balkon'], n: 3, potL: 6, potCm: 22 },
-  { sp: 'Bazylia', name: 'Bazylia', emoji: '🌿', loc: 'Parapet kuchenny', groups: ['Parapet', 'Zioła'], n: 4, potL: 1.5, potCm: 12 },
-  { sp: 'Mięta', name: 'Mięta', emoji: '🌿', loc: 'Parapet kuchenny', groups: ['Parapet', 'Zioła'], n: 3, potL: 1, potCm: 10 },
-  { sp: 'Tymianek', name: 'Tymianek', emoji: '🌿', loc: 'Parapet kuchenny', groups: ['Parapet', 'Zioła'], n: 3, potL: 1, potCm: 10 },
-  { sp: 'Monstera', name: 'Monstera', emoji: '🌴', loc: 'Salon', groups: ['Mieszkanie'], n: 1, potL: 15, potCm: 32 },
-  { sp: 'Fikus', name: 'Fikus lirata', emoji: '🪴', loc: 'Salon', groups: ['Mieszkanie'], n: 1, potL: 12, potCm: 28 },
-  { sp: 'Zamiokulkas', name: 'Zamiokulkas', emoji: '🪴', loc: 'Sypialnia', groups: ['Mieszkanie'], n: 1, potL: 8, potCm: 24 },
+  { species: 'Papryka Ostra', emoji: '🌶️', prefix: 'PAO', w: 3, f: 14, region: 'Szklarnia', groups: ['Papryki'], n: 12, potL: 5, potCm: 20 },
+  { species: 'Papryka Słodka', emoji: '🌶️', prefix: 'PAS', w: 3, f: 14, region: 'Szklarnia', groups: ['Papryki'], n: 8, potL: 5, potCm: 20 },
+  { species: 'Pomidor Malinowy', emoji: '🍅', prefix: 'POM', w: 2, f: 14, region: 'Szklarnia', groups: ['Pomidory'], n: 6, potL: 10, potCm: 26 },
+  { species: 'Pomidor Koktajlowy', emoji: '🍅', prefix: 'POK', w: 2, f: 14, region: 'Szklarnia', groups: ['Pomidory'], n: 4, potL: 7, potCm: 24 },
+  { species: 'Ogórek Gruntowy', emoji: '🥒', prefix: 'OGR', w: 2, f: null, region: 'Szklarnia', groups: [], n: 5, potL: 8, potCm: 24 },
+  { species: 'Sałata Dębolistna', emoji: '🥬', prefix: 'SAL', w: 2, f: null, region: 'Szklarnia', groups: [], n: 6, potL: 2, potCm: 14 },
+  { species: 'Cukinia', emoji: '🌿', prefix: 'CUK', w: 3, f: 10, region: 'Szklarnia', groups: [], n: 3, potL: 12, potCm: 30 },
+  { species: 'Truskawka', emoji: '🍓', prefix: 'TRU', w: 3, f: 14, region: 'Balkon', groups: ['Owoce'], n: 8, potL: 3, potCm: 16 },
+  { species: 'Pelargonia', emoji: '🌸', prefix: 'PEL', w: 4, f: 10, region: 'Balkon', groups: [], n: 4, potL: 4, potCm: 18 },
+  { species: 'Surfinia', emoji: '💐', prefix: 'SUR', w: 2, f: 7, region: 'Balkon', groups: [], n: 3, potL: 6, potCm: 22 },
+  { species: 'Bazylia', emoji: '🌿', prefix: 'BAZ', w: 2, f: null, region: 'Parapet', groups: ['Zioła'], n: 4, potL: 1.5, potCm: 12 },
+  { species: 'Mięta', emoji: '🌿', prefix: 'MIE', w: 3, f: null, region: 'Parapet', groups: ['Zioła'], n: 3, potL: 1, potCm: 10 },
+  { species: 'Tymianek', emoji: '🌿', prefix: 'TYM', w: 5, f: null, region: 'Parapet', groups: ['Zioła'], n: 3, potL: 1, potCm: 10 },
+  { species: 'Monstera', emoji: '🌴', prefix: 'MON', w: 7, f: null, region: 'Mieszkanie', groups: [], n: 1, potL: 15, potCm: 32 },
+  { species: 'Fikus Lirata', emoji: '🪴', prefix: 'FIK', w: 6, f: null, region: 'Mieszkanie', groups: [], n: 1, potL: 12, potCm: 28 },
+  { species: 'Zamiokulkas', emoji: '🪴', prefix: 'ZAM', w: 14, f: null, region: 'Mieszkanie', groups: [], n: 1, potL: 8, potCm: 24 },
 ];
 
 export const SEED_GROUPS: readonly Group[] = [
@@ -52,36 +59,38 @@ export const SEED_GROUPS: readonly Group[] = [
   { name: 'Owoce', emoji: '🍓', type: 'work' },
 ];
 
+export const buildSpecies = (): Species[] =>
+  GARDEN_DEFS.map((d) => ({
+    name: d.species,
+    emoji: d.emoji,
+    prefix: d.prefix,
+    w: d.w,
+    f: d.f,
+  }));
+
 export const buildGarden = (): Plant[] => {
   const garden: Plant[] = [];
-  const perSpecies: Record<string, number> = {};
   let id = 1;
 
   for (const def of GARDEN_DEFS) {
-    const info = SPECIES[def.sp] ?? { w: 3, f: null };
-    const waterIv = info.w ?? 3;
     for (let i = 0; i < def.n; i++) {
-      perSpecies[def.sp] = (perSpecies[def.sp] ?? 0) + 1;
-      const prefix = PREFIX[def.sp] ?? def.sp.slice(0, 3).toUpperCase();
-      const code = makeCode(prefix, perSpecies[def.sp]);
+      const code = makeCode(def.prefix, i + 1);
 
-      let lastWater = daysAdd(TODAY, -waterIv + (i % (waterIv + 1)));
-      if (i % 5 === 0) lastWater = daysAdd(TODAY, -(waterIv + 1));
+      let lastWater = daysAdd(TODAY, -def.w + (i % (def.w + 1)));
+      if (i % 5 === 0) lastWater = daysAdd(TODAY, -(def.w + 1));
 
       let lastFert: string | null = null;
-      if (info.f) lastFert = daysAdd(TODAY, -info.f + Math.min(i % (info.f + 1), info.f));
+      if (def.f) lastFert = daysAdd(TODAY, -def.f + Math.min(i % (def.f + 1), def.f));
 
       const noPot = i % 4 === 0;
       garden.push({
         id: id++,
         code,
-        name: def.name,
-        species: def.sp,
+        species: def.species,
         emoji: def.emoji,
-        loc: def.loc,
         potL: noPot ? null : def.potL,
         potCm: noPot ? null : def.potCm,
-        groups: [...def.groups],
+        groups: [def.region, ...def.groups],
         lastWater,
         lastFert,
       });
@@ -90,14 +99,14 @@ export const buildGarden = (): Plant[] => {
   return garden;
 };
 
-export const buildLog = (garden: Plant[]): LogEntry[] => {
+export const buildLog = (garden: readonly Plant[], species: readonly Species[]): LogEntry[] => {
   const log: LogEntry[] = [];
   let uid = 1;
 
   for (const p of garden) {
-    const info = SPECIES[p.species ?? ''] ?? { w: null, f: null };
+    const info = species.find((s) => s.name === p.species);
     log.push({ uid: uid++, id: p.id, type: 'water', date: p.lastWater });
-    if (info.w) {
+    if (info?.w) {
       log.push({ uid: uid++, id: p.id, type: 'water', date: daysAdd(p.lastWater, -info.w) });
     }
     if (p.lastFert) {
@@ -105,16 +114,23 @@ export const buildLog = (garden: Plant[]): LogEntry[] => {
     }
     log.push({ uid: uid++, id: p.id, type: 'add', date: '2026-05-12' });
   }
-  log.push({ uid: uid++, id: 1, type: 'repot', date: '2026-06-20' });
+  log.push({ uid: uid++, id: 1, type: 'repot', date: '2026-06-20', potL: 5, potCm: 20 });
   return log;
 };
 
 /** A fresh, fully-seeded initial dataset. */
-export const buildSeed = (): { garden: Plant[]; groups: Group[]; log: LogEntry[] } => {
+export const buildSeed = (): {
+  garden: Plant[];
+  groups: Group[];
+  log: LogEntry[];
+  species: Species[];
+} => {
+  const species = buildSpecies();
   const garden = buildGarden();
   return {
     garden,
     groups: SEED_GROUPS.map((g) => ({ ...g })),
-    log: buildLog(garden),
+    log: buildLog(garden, species),
+    species,
   };
 };

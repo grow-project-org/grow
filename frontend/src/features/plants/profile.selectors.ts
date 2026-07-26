@@ -1,7 +1,8 @@
-import type { ActionType, Group, LogEntry, LogType, Plant } from '../../types';
+import type { ActionType, Group, LogEntry, LogType, Plant, Species } from '../../types';
 import { fmtLong, fmtShort } from '../../utils/date';
 import { avatarBg, interval } from '../../domain/species';
 import { dueDate, lastOf, relLabel } from '../../domain/schedule';
+import { regionLabel } from '../../domain/regions';
 import { relColors } from '../../components/ui/relColors';
 
 export interface ScheduleItem {
@@ -31,6 +32,7 @@ export interface GroupTag {
 
 export interface ProfileView {
   avatarBg: string;
+  region: string;
   groups: GroupTag[];
   schedule: ScheduleItem[];
   history: HistoryItem[];
@@ -51,15 +53,31 @@ const LOG_META: Record<LogType, { emoji: string; label: string; bg: string }> = 
   add: { emoji: '🌱', label: 'Dodano do ogrodu', bg: '#e2f5d8' },
   prune: { emoji: '✂️', label: 'Podcięto', bg: '#e8e2ff' },
   harvest: { emoji: '🧺', label: 'Zbiór', bg: '#ffe9c7' },
-  move: { emoji: '📍', label: 'Zmiana miejsca', bg: '#ffe0d0' },
+  custom: { emoji: '📝', label: 'Zdarzenie', bg: '#eee7dd' },
 };
 
-const buildSchedule = (p: Plant): ScheduleItem[] =>
+const describe = (e: LogEntry): string => {
+  const meta = LOG_META[e.type];
+  if (e.type === 'repot' && (e.potL != null || e.potCm != null)) {
+    const size = e.potL != null ? `${e.potL} l` : `Ø ${e.potCm} cm`;
+    return `${meta.label} → ${size}`;
+  }
+  if (e.type === 'harvest' && (e.qty != null || e.weight != null)) {
+    const parts: string[] = [];
+    if (e.qty != null) parts.push(`${e.qty} szt.`);
+    if (e.weight != null) parts.push(`${e.weight} g`);
+    return `${meta.label}: ${parts.join(', ')}`;
+  }
+  if (e.type === 'custom' && e.note) return e.note;
+  return meta.label;
+};
+
+const buildSchedule = (species: readonly Species[], p: Plant): ScheduleItem[] =>
   (['water', 'fert'] as const)
     .map((type): ScheduleItem | null => {
-      const iv = interval(p.species, type);
+      const iv = interval(species, p.species, type);
       if (iv == null) return null;
-      const due = dueDate(p, type) as string;
+      const due = dueDate(species, p, type) as string;
       const rel = relLabel(due);
       const colors = relColors(rel);
       return {
@@ -73,7 +91,7 @@ const buildSchedule = (p: Plant): ScheduleItem[] =>
     })
     .filter((x): x is ScheduleItem => x !== null);
 
-const buildHistory = (p: Plant, log: LogEntry[]): HistoryItem[] => {
+const buildHistory = (p: Plant, log: readonly LogEntry[]): HistoryItem[] => {
   const entries = log
     .filter((e) => e.id === p.id)
     .sort((a, b) => b.date.localeCompare(a.date) || b.uid - a.uid);
@@ -82,7 +100,7 @@ const buildHistory = (p: Plant, log: LogEntry[]): HistoryItem[] => {
     return {
       key: e.uid,
       emoji: meta.emoji,
-      label: meta.label,
+      label: describe(e),
       bg: meta.bg,
       date: `${fmtLong(e.date)} ${e.date.slice(0, 4)}`,
       showLine: i < entries.length - 1,
@@ -96,15 +114,21 @@ const potText = (p: Plant): string => {
   return 'Nie podano';
 };
 
-export const selectProfile = (p: Plant, log: LogEntry[], groups: Group[]): ProfileView => {
+export const selectProfile = (
+  species: readonly Species[],
+  p: Plant,
+  log: readonly LogEntry[],
+  groups: readonly Group[],
+): ProfileView => {
   const history = buildHistory(p, log);
   return {
     avatarBg: avatarBg(p.id),
+    region: regionLabel(p, groups),
     groups: p.groups.map((name) => ({
       name,
       emoji: groups.find((g) => g.name === name)?.emoji ?? '📁',
     })),
-    schedule: buildSchedule(p),
+    schedule: buildSchedule(species, p),
     history,
     histCount: `${history.length} wpisów`,
     potText: potText(p),

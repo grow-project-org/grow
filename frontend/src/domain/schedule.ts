@@ -1,10 +1,10 @@
-import type { ActionType, Plant } from '../types';
+import type { ActionType, Plant, Species } from '../types';
 import { TODAY } from '../config';
 import { daysAdd, diffDays } from '../utils/date';
 import { interval } from './species';
 
 /**
- * Scheduling logic — pure functions over a plant + the species catalogue.
+ * Scheduling logic — pure functions over the species catalogue + a plant.
  * No React, no state: safe to unit-test and reuse anywhere.
  */
 
@@ -22,8 +22,12 @@ export const lastOf = (p: Plant, type: ActionType): string | null =>
   type === 'water' ? p.lastWater : p.lastFert;
 
 /** Next scheduled date for an action, or `null` when the action isn't tracked. */
-export const dueDate = (p: Plant, type: ActionType): string | null => {
-  const iv = interval(p.species, type);
+export const dueDate = (
+  species: readonly Species[],
+  p: Plant,
+  type: ActionType,
+): string | null => {
+  const iv = interval(species, p.species, type);
   const last = lastOf(p, type);
   if (iv == null || !last) return null;
   return daysAdd(last, iv);
@@ -31,12 +35,13 @@ export const dueDate = (p: Plant, type: ActionType): string | null => {
 
 /** Is this action due (today or overdue) and not yet checked off today? */
 export const isDue = (
+  species: readonly Species[],
   p: Plant,
   type: ActionType,
   done: DoneMap,
   today: string = TODAY,
 ): boolean => {
-  const due = dueDate(p, type);
+  const due = dueDate(species, p, type);
   return due != null && diffDays(due, today) <= 0 && !isDoneToday(done, p.id, type);
 };
 

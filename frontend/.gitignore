@@ -5,3 +5,18 @@ dist-ssr
 .vite
 .DS_Store
 *.log
+
+# TypeScript incremental build cache (tsc -b) — regenerated on every build.
+*.tsbuildinfo
+
+# Test coverage output.
+coverage
+
+# Local environment overrides (e.g. VITE_API_URL) — never shared or secret-free.
+.env
+.env.*
+!.env.example
+
+# Editor/IDE local state.
+.claude/
+.idea/

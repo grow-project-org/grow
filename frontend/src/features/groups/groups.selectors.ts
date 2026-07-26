@@ -1,4 +1,4 @@
-import type { ActionType, Group, GroupType, Plant } from '../../types';
+import type { ActionType, Group, GroupType, Plant, Species } from '../../types';
 import { fmtShort } from '../../utils/date';
 import { interval } from '../../domain/species';
 import {
@@ -56,7 +56,7 @@ export interface GroupCard {
 const TYPE_META: Record<GroupType, { label: string; bg: string; ink: string }> = {
   work: { label: 'Grupa robocza', bg: '#e7f0ff', ink: '#2f5fa8' },
   region: { label: 'Region', bg: '#f3ecff', ink: '#6b4bb0' },
-  adhoc: { label: 'Doraźna', bg: '#fff0e0', ink: '#b5701a' },
+  adhoc: { label: 'Grupa tymczasowa', bg: '#fff0e0', ink: '#b5701a' },
 };
 
 const ACTION_META: Record<ActionType, { emoji: string; verb: string; label: string }> = {
@@ -65,28 +65,29 @@ const ACTION_META: Record<ActionType, { emoji: string; verb: string; label: stri
 };
 
 const buildAction = (
+  species: readonly Species[],
   group: Group,
   members: Plant[],
   type: ActionType,
   done: DoneMap,
 ): GroupAction | null => {
-  const tracked = members.filter((p) => interval(p.species, type) != null);
+  const tracked = members.filter((p) => interval(species, p.species, type) != null);
   if (!tracked.length) return null;
 
-  const dueList = tracked.filter((p) => isDue(p, type, done));
-  const intervals = new Set(tracked.map((p) => interval(p.species, type)));
-  const dueDates = new Set(tracked.map((p) => dueDate(p, type)));
+  const dueList = tracked.filter((p) => isDue(species, p, type, done));
+  const intervals = new Set(tracked.map((p) => interval(species, p.species, type)));
+  const dueDates = new Set(tracked.map((p) => dueDate(species, p, type)));
   const mixedInterval = intervals.size > 1;
   const canAlign = !mixedInterval && dueDates.size > 1;
   const meta = ACTION_META[type];
 
   const rows: GroupActionRow[] = tracked.map((p) => {
     const done1 = isDoneToday(done, p.id, type);
-    const nowDue = isDue(p, type, done);
+    const nowDue = isDue(species, p, type, done);
     return {
       id: p.id,
-      name: p.name,
-      sub: `co ${interval(p.species, type)} dni · nast. ${fmtShort(dueDate(p, type))}`,
+      name: p.code,
+      sub: `co ${interval(species, p.species, type)} dni · nast. ${fmtShort(dueDate(species, p, type))}`,
       done: done1,
       stateLabel: done1 ? 'zrobione' : nowDue ? 'dziś' : 'nie dziś',
     };
@@ -113,14 +114,15 @@ const buildAction = (
 };
 
 const buildCard = (
+  species: readonly Species[],
   group: Group,
   garden: Plant[],
   done: DoneMap,
   dismissed: Record<string, boolean>,
 ): GroupCard => {
   const members = garden.filter((p) => p.groups.includes(group.name));
-  const water = buildAction(group, members, 'water', done);
-  const fert = buildAction(group, members, 'fert', done);
+  const water = buildAction(species, group, members, 'water', done);
+  const fert = buildAction(species, group, members, 'fert', done);
   const actions = [water, fert].filter((a): a is GroupAction => a !== null);
   const totalDue = actions.reduce((sum, a) => sum + a.due, 0);
   const anyMixed = group.type !== 'region' && actions.some((a) => a.mixedInterval);
@@ -146,8 +148,9 @@ const buildCard = (
 };
 
 export const selectGroups = (
+  species: readonly Species[],
   garden: Plant[],
   groups: Group[],
   done: DoneMap,
   dismissed: Record<string, boolean>,
-): GroupCard[] => groups.map((g) => buildCard(g, garden, done, dismissed));
+): GroupCard[] => groups.map((g) => buildCard(species, g, garden, done, dismissed));
