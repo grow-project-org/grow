@@ -27,7 +27,14 @@ export interface TodaySection {
   rows: TodayRow[];
 }
 
+export interface TodaySummary {
+  water: number;
+  fert: number;
+  overdue: number;
+}
+
 export interface TodayView {
+  summary: TodaySummary;
   sections: TodaySection[];
   left: number;
   allDone: boolean;
@@ -75,14 +82,18 @@ export const selectToday = (
   done: DoneMap,
 ): TodayView => {
   const sections: TodaySection[] = [];
+  const summary: TodaySummary = { water: 0, fert: 0, overdue: 0 };
   let left = 0;
 
   (['water', 'fert'] as const).forEach((type) => {
     const rows = buildRows(species, groups, garden, done, type);
     if (!rows.length) return;
     sections.push({ type, ...SECTION_META[type], rows });
-    left += rows.filter((r) => !r.done).length;
+    const undone = rows.filter((r) => !r.done).length;
+    left += undone;
+    summary[type] = undone;
+    summary.overdue += rows.filter((r) => r.overdue).length;
   });
 
-  return { sections, left, allDone: left === 0 };
+  return { summary, sections, left, allDone: left === 0 };
 };

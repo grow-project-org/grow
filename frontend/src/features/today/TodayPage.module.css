@@ -44,6 +44,48 @@
   letter-spacing: 0.04em;
 }
 
+.summary {
+  display: flex;
+  gap: 9px;
+  margin-top: 14px;
+}
+
+.summaryStat {
+  flex: 1;
+  padding: 12px;
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.summaryValue {
+  display: block;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.summaryLabel {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.summaryWater {
+  background: var(--color-water-tint);
+}
+
+.summaryFert {
+  background: var(--color-fert-tint);
+}
+
+.summaryOverdue {
+  background: var(--color-overdue-bg);
+  color: var(--color-overdue-ink);
+}
+
 .allDone {
   margin-top: 20px;
   padding: 28px 20px;

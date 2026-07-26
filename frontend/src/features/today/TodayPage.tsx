@@ -11,7 +11,7 @@ import styles from './TodayPage.module.css';
 export const TodayPage = () => {
   const { species, groups, garden, done, toggleToday } = useGarden();
   const navigate = useNavigate();
-  const { sections, left, allDone } = selectToday(species, groups, garden, done);
+  const { summary, sections, left, allDone } = selectToday(species, groups, garden, done);
 
   return (
     <div className={styles.page}>
@@ -25,6 +25,21 @@ export const TodayPage = () => {
           <span className={styles.counterLabel}>DO ZROB.</span>
         </div>
       </header>
+
+      <div className={styles.summary}>
+        <div className={`${styles.summaryStat} ${styles.summaryWater}`}>
+          <span className={styles.summaryValue}>{summary.water}</span>
+          <span className={styles.summaryLabel}>💧 do podlania</span>
+        </div>
+        <div className={`${styles.summaryStat} ${styles.summaryFert}`}>
+          <span className={styles.summaryValue}>{summary.fert}</span>
+          <span className={styles.summaryLabel}>🌱 do nawożenia</span>
+        </div>
+        <div className={`${styles.summaryStat} ${styles.summaryOverdue}`}>
+          <span className={styles.summaryValue}>{summary.overdue}</span>
+          <span className={styles.summaryLabel}>⚠️ zaległe</span>
+        </div>
+      </div>
 
       {allDone && (
         <div className={styles.allDone}>
