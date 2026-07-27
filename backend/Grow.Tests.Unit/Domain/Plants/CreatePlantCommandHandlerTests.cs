@@ -1,7 +1,6 @@
 ﻿using Grow.Domain;
 using Grow.Domain.Plants;
 using Grow.Domain.Plants.Handlers;
-using Grow.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 
@@ -10,48 +9,112 @@ namespace Grow.Tests.Unit.Domain.Plants;
 [TestFixture]
 public class CreatePlantCommandHandlerTests
 {
-    private DbContextOptions<DatabaseContext> _dbContextOptions;
-
-    [SetUp]
-    public void SetUp()
-    {
-        this._dbContextOptions = new DbContextOptionsBuilder<DatabaseContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
-            .Options;
-    }
-
     [Test]
     public async Task HandleAsync_WhenCustomIdAlreadyExists_ThrowsArgumentExceptionAndDoesNotSave()
     {
-        await using var dbContext = new DatabaseContext(this._dbContextOptions);
-        dbContext.Plants.Add(Plant.Create(Guid.NewGuid(), "plant-01", Guid.NewGuid()));
-        await dbContext.SaveChangesAsync();
+        var plants = new List<Plant>
+       {
+           Plant.Create(
+               Guid.NewGuid(),
+               "plant-01",
+               Guid.NewGuid())
+       };
+
+        var dbSetMock = new Mock<DbSet<Plant>>();
+
+        dbSetMock
+            .As<IQueryable<Plant>>()
+            .Setup(x => x.Provider)
+            .Returns(plants.AsQueryable().Provider);
+
+        dbSetMock
+            .As<IQueryable<Plant>>()
+            .Setup(x => x.Expression)
+            .Returns(plants.AsQueryable().Expression);
+
+        dbSetMock
+            .As<IQueryable<Plant>>()
+            .Setup(x => x.ElementType)
+            .Returns(plants.AsQueryable().ElementType);
+
+        dbSetMock
+            .As<IQueryable<Plant>>()
+            .Setup(x => x.GetEnumerator())
+            .Returns(plants.AsQueryable().GetEnumerator);
 
         var contextMock = new Mock<IDatabaseContext>();
-        contextMock.Setup(c => c.Plants).Returns(dbContext.Plants);
+
+        contextMock
+            .Setup(x => x.Plants)
+            .Returns(dbSetMock.Object);
 
         var handler = new CreatePlantCommandHandler(contextMock.Object);
-        var command = new CreatePlantCommand(Guid.NewGuid(), "plant-01", Guid.NewGuid());
+
+        var command = new CreatePlantCommand(
+            Guid.NewGuid(),
+               "plant-01",
+               Guid.NewGuid());
 
         Assert.ThrowsAsync<ArgumentException>(() => handler.HandleAsync(command, CancellationToken.None));
 
-        contextMock.Verify(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+        contextMock.Verify(
+            x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Test]
     public async Task HandleAsync_WhenCustomIdIsUnique_AddsPlantAndCallsSaveChanges()
     {
-        await using var dbContext = new DatabaseContext(this._dbContextOptions);
+        var plants = new List<Plant>();
+
+        var dbSetMock = new Mock<DbSet<Plant>>();
+
+        dbSetMock
+            .As<IQueryable<Plant>>()
+            .Setup(x => x.Provider)
+            .Returns(plants.AsQueryable().Provider);
+
+        dbSetMock
+            .As<IQueryable<Plant>>()
+            .Setup(x => x.Expression)
+            .Returns(plants.AsQueryable().Expression);
+
+        dbSetMock
+            .As<IQueryable<Plant>>()
+            .Setup(x => x.ElementType)
+            .Returns(plants.AsQueryable().ElementType);
+
+        dbSetMock
+            .As<IQueryable<Plant>>()
+            .Setup(x => x.GetEnumerator())
+            .Returns(plants.AsQueryable().GetEnumerator);
+
         var contextMock = new Mock<IDatabaseContext>();
-        contextMock.Setup(c => c.Plants).Returns(dbContext.Plants);
-        contextMock.Setup(c => c.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+
+        contextMock
+            .Setup(x => x.Plants)
+            .Returns(dbSetMock.Object);
+
+        contextMock
+           .Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
+           .ReturnsAsync(1);
 
         var handler = new CreatePlantCommandHandler(contextMock.Object);
-        var command = new CreatePlantCommand(Guid.NewGuid(), "plant-02", Guid.NewGuid());
+
+        var command = new CreatePlantCommand(
+            Guid.NewGuid(),
+               "plant-01",
+               Guid.NewGuid());
 
         await handler.HandleAsync(command, CancellationToken.None);
 
-        Assert.That(dbContext.Plants.Local.Any(p => p.Id == command.Id && p.CustomId == "plant-02"), Is.True);
-        contextMock.Verify(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        dbSetMock.Verify(
+            x => x.Add(It.Is<Plant>(p =>
+                p.Id == command.Id &&
+                p.CustomId == command.CustomId &&
+                p.SpecieId == command.SpecieId)),
+            Times.Once);
+
+        contextMock.Verify(
+            x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }
