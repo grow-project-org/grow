@@ -34,6 +34,7 @@ var postgresConnectionString = builder.Configuration.GetConnectionString("Postgr
     ?? throw new InvalidOperationException("Missing ConnectionStrings:Postgres configuration.");
 builder.Services.AddDbContextFactory<DatabaseContext>(options =>
     options.UseNpgsql(postgresConnectionString));
+builder.Services.AddScoped<IDatabaseContext>(sp => sp.GetRequiredService<DatabaseContext>());
 
 
 builder.Services.AddHealthChecks().AddDbContextCheck<DatabaseContext>();
