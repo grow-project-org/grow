@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Grow.Commons\Grow.Commons.csproj" />
     <ProjectReference Include="..\Grow.Cqrs\Grow.Cqrs.csproj" />
   </ItemGroup>
 
