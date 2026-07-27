@@ -32,9 +32,7 @@ builder.Services.AddMemoryCache(options =>
 
 var postgresConnectionString = builder.Configuration.GetConnectionString("Postgres")
     ?? throw new InvalidOperationException("Missing ConnectionStrings:Postgres configuration.");
-builder.Services.AddDbContextFactory<DatabaseContext>(options =>
-    options.UseNpgsql(postgresConnectionString));
-
+builder.Services.AddGrowDatabase(o => o.UseNpgsql(postgresConnectionString));
 
 builder.Services.AddHealthChecks().AddDbContextCheck<DatabaseContext>();
 
