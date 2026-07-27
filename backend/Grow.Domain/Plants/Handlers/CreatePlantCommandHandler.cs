@@ -9,8 +9,8 @@ public class CreatePlantCommandHandler(IDatabaseContext context) : ICommandHandl
 {
     public async Task HandleAsync(CreatePlantCommand command, CancellationToken ct)
     {
-        var customIdAlreadyExists = context.Plants
-            .Any(p => p.CustomId == command.CustomId);
+        var customIdAlreadyExists = await context.Plants
+            .AnyAsync(p => p.CustomId == command.CustomId);
 
         if (customIdAlreadyExists)
         {
