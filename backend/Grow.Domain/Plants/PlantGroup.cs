@@ -9,6 +9,8 @@ public class PlantGroup
     public Guid Id { get; private set; }
     public string Name { get; private set; }
     public GroupType Type { get; private set; }
+    public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; private set; } = DateTime.UtcNow;
 
     private readonly List<Plant> _plants = [];
     public IReadOnlyCollection<Plant> Plants => this._plants.AsReadOnly();
@@ -26,8 +28,6 @@ public class PlantGroup
 
     public void AddPlant(Plant plant)
     {
-        ArgumentNullException.ThrowIfNull(plant);
-
         if (!this._plants.Contains(plant))
         {
             this._plants.Add(plant);

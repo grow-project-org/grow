@@ -6,7 +6,7 @@ namespace Grow.Domain.Plants;
 
 public enum GroupType
 {
-    Region,
-    WorkGroup,
-    TemporaryGroup
+    Region = 1,
+    WorkGroup = 2,
+    TemporaryGroup = 3
 }
