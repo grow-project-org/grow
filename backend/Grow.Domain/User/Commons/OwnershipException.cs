@@ -2,12 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Grow.Domain.User.Interface;
-
-public interface IOwnerable
-{
-    Guid OwnerId { get; }
-}
+namespace Grow.Domain.User;
 
 public class OwnershipException(Guid objectOwnerId, Guid actionPerformer) : Exception
 {
