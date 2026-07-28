@@ -1,0 +1,18 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace Grow.Domain.User.Interface;
+
+public interface IOwnerable
+{
+    Guid OwnerId { get; }
+}
+
+public class OwnershipException(Guid objectOwnerId, Guid actionPerformer) : Exception
+{
+    public Guid ObjectOwnerId { get; } = objectOwnerId;
+    public Guid ActionPerformer { get; } = actionPerformer;
+
+    public override string ToString() => $"User {this.ActionPerformer} tried to get access to property of user {this.ObjectOwnerId}";
+}
