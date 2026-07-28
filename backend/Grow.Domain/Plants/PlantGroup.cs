@@ -1,0 +1,41 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace Grow.Domain.Plants;
+
+public class PlantGroup
+{
+    public Guid Id { get; private set; }
+    public string Name { get; private set; }
+    public GroupType Type { get; private set; }
+
+    private readonly List<Plant> _plants = [];
+    public IReadOnlyCollection<Plant> Plants => this._plants.AsReadOnly();
+
+    private PlantGroup(Guid id, string name, GroupType type)
+    {
+        this.Id = id;
+        this.Name = name;
+        this.Type = type;
+    }
+
+    public static PlantGroup CreateWorkGroup(Guid id, string name) => new(id, name, GroupType.WorkGroup);
+    public static PlantGroup CreateRegion(Guid id, string name) => new(id, name, GroupType.Region);
+    public static PlantGroup CreateTemporaryGroup(Guid id, string name) => new(id, name, GroupType.TemporaryGroup);
+
+    public void AddPlant(Plant plant)
+    {
+        ArgumentNullException.ThrowIfNull(plant);
+
+        if (!this._plants.Contains(plant))
+        {
+            this._plants.Add(plant);
+        }
+    }
+
+    public void RemovePlant(Plant plant)
+    {
+        this._plants.Remove(plant);
+    }
+}
