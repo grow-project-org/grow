@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Grow.Domain.User;
+namespace Grow.Domain.Users.Commons;
 
 public class OwnershipException(Guid objectOwnerId, Guid actionPerformer) : Exception
 {

@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Grow.Domain.User.Extension;
+namespace Grow.Domain.Users.Commons;
 
-public static class OwnerableExtensions
+public static class OwnableExtensions
 {
     extension(IOwnerable ownerable)
     {
