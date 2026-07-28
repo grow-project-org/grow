@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Grow.Domain.Users.Commons;
 
-public interface IOwnerable
+public interface IOwnable
 {
     Guid OwnerId { get; }
 }

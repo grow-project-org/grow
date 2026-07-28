@@ -6,15 +6,15 @@ namespace Grow.Domain.Users.Commons;
 
 public static class OwnableExtensions
 {
-    extension(IOwnerable ownerable)
+    extension(IOwnable ownable)
     {
-        public bool CheckOwnership(Guid userId) => ownerable.OwnerId == userId;
+        public bool CheckOwnership(Guid userId) => ownable.OwnerId == userId;
 
         public void ThrowIfNotOwner(Guid userId)
         {
-            if (ownerable.CheckOwnership(userId) == false)
+            if (ownable.CheckOwnership(userId) == false)
             {
-                throw new OwnershipException(ownerable.OwnerId, userId);
+                throw new OwnershipException(ownable.OwnerId, userId);
             }
         }
     }

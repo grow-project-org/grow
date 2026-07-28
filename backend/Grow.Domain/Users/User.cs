@@ -10,6 +10,13 @@ public class User
     public string Email { get; private set; }
     public string Username { get; private set; }
 
+    private User(Guid id, string email, string username)
+    {
+        this.Id = id;
+        this.Email = email;
+        this.Username = username;
+    }
+
     public static User Create(Guid id, string email, string username)
     {
         if (id == Guid.Empty)
@@ -21,13 +28,6 @@ public class User
         ValidateEmail(email);
 
         return new User(id, email, username);
-    }
-
-    private User(Guid id, string email, string username)
-    {
-        this.Id = id;
-        this.Email = email;
-        this.Username = username;
     }
 
     private static void ValidateEmail(string email)
