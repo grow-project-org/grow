@@ -11,8 +11,8 @@ public class Plant
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; private set; } = DateTime.UtcNow;
 
-    public Guid PlantGroupId { get; private set; }
-    public PlantGroup PlantGroup { get; private set; }
+    public Guid? PlantGroupId { get; private set; }
+    public PlantGroup? PlantGroup { get; private set; }
 
     private Plant(Guid id, string customId, Guid specieId)
     {
