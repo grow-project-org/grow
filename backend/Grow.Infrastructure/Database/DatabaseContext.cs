@@ -26,11 +26,6 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbCont
             entity.Property(p => p.SpecieId).IsRequired();
             entity.Property(p => p.CreatedAt).IsRequired();
             entity.Property(p => p.UpdatedAt).IsRequired();
-            entity.Property(p => p.PlantGroupId).IsRequired(false);
-            entity.HasOne(pg => pg.PlantGroup)
-                .WithMany(p => p.Plants)
-                .HasForeignKey(p => p.PlantGroupId)
-                .OnDelete(DeleteBehavior.SetNull);
         });
 
         builder.Entity<Specie>(entity => 
@@ -61,6 +56,10 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbCont
             entity.Property(p => p.Type).IsRequired();
             entity.Property(p => p.CreatedAt).IsRequired();
             entity.Property(p => p.UpdatedAt).IsRequired();
+            entity.HasMany(pg => pg.Plants)
+                .WithOne()
+                .HasForeignKey("PlantGroupId")
+                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 }
