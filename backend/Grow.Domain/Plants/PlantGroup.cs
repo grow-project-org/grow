@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Collections.ObjectModel;
 
 namespace Grow.Domain.Plants;
 
@@ -12,8 +13,8 @@ public class PlantGroup
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; private set; } = DateTime.UtcNow;
 
-    private readonly List<Plant> _plants = [];
-    public IReadOnlyCollection<Plant> Plants => this._plants.AsReadOnly();
+    private readonly Collection<Plant> _plants = [];
+    public IReadOnlyCollection<Plant> Plants => this._plants;
 
     private PlantGroup(Guid id, string name, GroupType type)
     {
