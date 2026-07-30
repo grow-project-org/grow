@@ -26,6 +26,9 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbCont
             entity.Property(p => p.SpecieId).IsRequired();
             entity.Property(p => p.CreatedAt).IsRequired();
             entity.Property(p => p.UpdatedAt).IsRequired();
+            entity.HasMany(p => p.PlantGroups)
+                .WithMany(pg => pg.Plants)
+                .UsingEntity(j => j.ToTable("PlantGroupPlants"));
         });
 
         builder.Entity<Specie>(entity => 
@@ -56,12 +59,6 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbCont
             entity.Property(p => p.Type).IsRequired();
             entity.Property(p => p.CreatedAt).IsRequired();
             entity.Property(p => p.UpdatedAt).IsRequired();
-            entity.Metadata
-                .FindNavigation(nameof(PlantGroup.Plants))!
-                .SetPropertyAccessMode(PropertyAccessMode.Field);
-            entity.HasMany(pg => pg.Plants)
-                .WithMany()
-                .UsingEntity(j => j.ToTable("PlantGroupPlants"));
         });
     }
 }
