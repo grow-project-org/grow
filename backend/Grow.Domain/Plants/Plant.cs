@@ -17,6 +17,9 @@ public class Plant
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; private set; } = DateTime.UtcNow;
 
+    private readonly Collection<PlantGroup> _plantGroups = [];
+    public IReadOnlyCollection<PlantGroup> PlantGroups => this._plantGroups;
+
     private Plant(Guid id, string customId, Guid specieId)
     {
         this.Id = id;

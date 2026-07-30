@@ -2,6 +2,7 @@
 using Grow.Domain.Commons;
 using Grow.Domain.Plants;
 using Grow.Domain.Species;
+using Grow.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 
@@ -11,6 +12,8 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbCont
 {
     public DbSet<Plant> Plants { get; set; }
     public DbSet<Specie> Species { get; set; }
+    public DbSet<User> Users { get; set; }
+    public DbSet<PlantGroup> PlantGroups { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -23,6 +26,9 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbCont
             entity.Property(p => p.SpecieId).IsRequired();
             entity.Property(p => p.CreatedAt).IsRequired();
             entity.Property(p => p.UpdatedAt).IsRequired();
+            entity.HasMany(p => p.PlantGroups)
+                .WithMany(pg => pg.Plants)
+                .UsingEntity(j => j.ToTable("PlantGroupPlants"));
 
             entity.HasMany(p => p.PlantActionLogs)
                 .WithOne()
@@ -50,6 +56,26 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbCont
             entity.HasKey(p => p.Id);
             entity.Property(p => p.Name).IsRequired().HasMaxLength(100);
             entity.Property(p => p.Intervals).IsRequired().HasConversion(x => JsonConvert.SerializeObject(x), x => JsonConvert.DeserializeObject<Dictionary<PlantActionType, TimeSpan>>(x)!);
+            entity.Property(p => p.CreatedAt).IsRequired();
+            entity.Property(p => p.UpdatedAt).IsRequired();
+        });
+
+        builder.Entity<User>(entity =>
+        {
+            entity.ToTable("Users");
+            entity.HasKey(u => u.Id);
+            entity.Property(u => u.Id).ValueGeneratedNever();
+            entity.Property(u => u.Email).IsRequired();
+            entity.Property(u => u.Username).IsRequired();
+        });
+
+        builder.Entity<PlantGroup>(entity =>
+        {
+            entity.ToTable("PlantGroups");
+            entity.HasKey(p => p.Id);
+            entity.Property(p => p.Id).ValueGeneratedNever();
+            entity.Property(p => p.Name).IsRequired();
+            entity.Property(p => p.Type).IsRequired();
             entity.Property(p => p.CreatedAt).IsRequired();
             entity.Property(p => p.UpdatedAt).IsRequired();
         });
