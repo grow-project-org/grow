@@ -57,9 +57,8 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbCont
             entity.Property(p => p.CreatedAt).IsRequired();
             entity.Property(p => p.UpdatedAt).IsRequired();
             entity.HasMany(pg => pg.Plants)
-                .WithOne()
-                .HasForeignKey("PlantGroupId")
-                .OnDelete(DeleteBehavior.SetNull);
+                .WithMany("Groups")
+                .UsingEntity(j => j.ToTable("PlantGroupPlants"));
         });
     }
 }

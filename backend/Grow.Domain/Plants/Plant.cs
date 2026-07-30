@@ -1,4 +1,6 @@
-﻿namespace Grow.Domain.Plants;
+﻿using System.Collections.ObjectModel;
+
+namespace Grow.Domain.Plants;
 
 public class Plant
 {
@@ -10,6 +12,9 @@ public class Plant
     public Guid SpecieId { get; private set; }
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; private set; } = DateTime.UtcNow;
+
+    private readonly Collection<PlantGroup> _plants = [];
+    public IReadOnlyCollection<PlantGroup> Plants => this._plants;
 
     private Plant(Guid id, string customId, Guid specieId)
     {
