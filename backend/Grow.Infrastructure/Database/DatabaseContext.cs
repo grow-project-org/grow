@@ -56,8 +56,11 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbCont
             entity.Property(p => p.Type).IsRequired();
             entity.Property(p => p.CreatedAt).IsRequired();
             entity.Property(p => p.UpdatedAt).IsRequired();
+            entity.Metadata
+                .FindNavigation(nameof(PlantGroup.Plants))!
+                .SetPropertyAccessMode(PropertyAccessMode.Field);
             entity.HasMany(pg => pg.Plants)
-                .WithMany("Groups")
+                .WithMany()
                 .UsingEntity(j => j.ToTable("PlantGroupPlants"));
         });
     }
