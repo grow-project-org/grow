@@ -29,9 +29,28 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbCont
             entity.HasMany(p => p.PlantGroups)
                 .WithMany(pg => pg.Plants)
                 .UsingEntity(j => j.ToTable("PlantGroupPlants"));
+
+            entity.HasMany(p => p.PlantActionLogs)
+                .WithOne()
+                .HasForeignKey("PlantId")
+                .IsRequired();
+
+            entity.Navigation(p => p.PlantActionLogs)
+                .HasField("plantActionLogs")
+                .UsePropertyAccessMode(PropertyAccessMode.Field);
         });
 
-        builder.Entity<Specie>(entity => 
+        builder.Entity<PlantActionLog>(entity =>
+        {
+            entity.ToTable("PlantActionLogs");
+            entity.HasKey(p => p.Id);
+            entity.Property(p => p.Id).ValueGeneratedNever();
+            entity.Property(p => p.Type).IsRequired();
+            entity.Property(p => p.CreatedAt).IsRequired();
+            entity.Property(p => p.ExecutedAt).IsRequired();
+        });
+
+        builder.Entity<Specie>(entity =>
         {
             entity.ToTable("Species");
             entity.HasKey(p => p.Id);
