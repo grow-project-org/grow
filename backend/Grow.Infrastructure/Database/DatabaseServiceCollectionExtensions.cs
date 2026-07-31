@@ -10,10 +10,10 @@ public static class DatabaseServiceCollectionExtensions
         this IServiceCollection services,
         Action<DbContextOptionsBuilder> configure)
     {
-        services.AddDbContextFactory<DatabaseContext>(configure);
-        services.AddScoped(sp =>
+        _ = services.AddDbContextFactory<DatabaseContext>(configure);
+        _ = services.AddScoped(sp =>
             sp.GetRequiredService<IDbContextFactory<DatabaseContext>>().CreateDbContext());
-        services.AddScoped<IDatabaseContext>(sp =>
+        _ = services.AddScoped<IDatabaseContext>(sp =>
             sp.GetRequiredService<DatabaseContext>());
         return services;
     }

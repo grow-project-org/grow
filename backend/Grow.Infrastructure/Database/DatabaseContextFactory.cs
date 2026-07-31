@@ -11,7 +11,7 @@ public class DatabaseContextFactory : IDesignTimeDbContextFactory<DatabaseContex
             ?? "Host=localhost;Username=postgres;Database=postgres";
 
         var optionsBuilder = new DbContextOptionsBuilder<DatabaseContext>();
-        optionsBuilder.UseNpgsql(connectionString);
+        _ = optionsBuilder.UseNpgsql(connectionString);
 
         return new DatabaseContext(optionsBuilder.Options);
     }

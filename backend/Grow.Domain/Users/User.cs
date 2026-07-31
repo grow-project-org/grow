@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Grow.Domain.Users;
+﻿namespace Grow.Domain.Users;
 
 public class User
 {

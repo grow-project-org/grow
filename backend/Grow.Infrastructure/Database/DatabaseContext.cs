@@ -18,67 +18,67 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbCont
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
-        builder.Entity<Plant>(entity =>
+        _ = builder.Entity<Plant>(entity =>
         {
-            entity.ToTable("Plants");
-            entity.HasKey(p => p.Id);
-            entity.Property(p => p.Id).ValueGeneratedNever();
-            entity.Property(p => p.CustomId).IsRequired().HasMaxLength(100);
-            entity.Property(p => p.SpecieId).IsRequired();
-            entity.Property(p => p.CreatedAt).IsRequired();
-            entity.Property(p => p.UpdatedAt).IsRequired();
-            entity.HasMany(p => p.PlantGroups)
+            _ = entity.ToTable("Plants");
+            _ = entity.HasKey(p => p.Id);
+            _ = entity.Property(p => p.Id).ValueGeneratedNever();
+            _ = entity.Property(p => p.CustomId).IsRequired().HasMaxLength(100);
+            _ = entity.Property(p => p.SpecieId).IsRequired();
+            _ = entity.Property(p => p.CreatedAt).IsRequired();
+            _ = entity.Property(p => p.UpdatedAt).IsRequired();
+            _ = entity.HasMany(p => p.PlantGroups)
                 .WithMany(pg => pg.Plants)
                 .UsingEntity(j => j.ToTable("PlantGroupPlants"));
 
-            entity.HasMany(p => p.Events)
+            _ = entity.HasMany(p => p.Events)
                 .WithOne()
                 .HasForeignKey(x => x.PlantId)
                 .IsRequired();
 
-            entity.Navigation(p => p.Events)
-                .HasField("PlantEvents")
+            _ = entity.Navigation(p => p.Events)
+                .HasField("events")
                 .UsePropertyAccessMode(PropertyAccessMode.Field);
         });
 
-        builder.Entity<PlantEvent>(entity =>
+        _ = builder.Entity<PlantEvent>(entity =>
         {
-            entity.ToTable("PlantEvents");
-            entity.HasKey(p => p.Id);
-            entity.Property(p => p.Id).ValueGeneratedNever();
-            entity.Property(p => p.Type).IsRequired();
-            entity.Property(p => p.CreatedAt).IsRequired();
-            entity.Property(p => p.ExecutedAt).IsRequired();
+            _ = entity.ToTable("PlantEvents");
+            _ = entity.HasKey(p => p.Id);
+            _ = entity.Property(p => p.Id).ValueGeneratedNever();
+            _ = entity.Property(p => p.Type).IsRequired();
+            _ = entity.Property(p => p.CreatedAt).IsRequired();
+            _ = entity.Property(p => p.ExecutedAt).IsRequired();
         });
 
-        builder.Entity<Specie>(entity =>
+        _ = builder.Entity<Specie>(entity =>
         {
-            entity.ToTable("Species");
-            entity.HasKey(p => p.Id);
-            entity.Property(p => p.Name).IsRequired().HasMaxLength(100);
-            entity.Property(p => p.Intervals).IsRequired().HasConversion(x => JsonConvert.SerializeObject(x), x => JsonConvert.DeserializeObject<Dictionary<PlantActionType, TimeSpan>>(x)!);
-            entity.Property(p => p.CreatedAt).IsRequired();
-            entity.Property(p => p.UpdatedAt).IsRequired();
+            _ = entity.ToTable("Species");
+            _ = entity.HasKey(p => p.Id);
+            _ = entity.Property(p => p.Name).IsRequired().HasMaxLength(100);
+            _ = entity.Property(p => p.Intervals).IsRequired().HasConversion(x => JsonConvert.SerializeObject(x), x => JsonConvert.DeserializeObject<Dictionary<PlantActionType, TimeSpan>>(x)!);
+            _ = entity.Property(p => p.CreatedAt).IsRequired();
+            _ = entity.Property(p => p.UpdatedAt).IsRequired();
         });
 
-        builder.Entity<User>(entity =>
+        _ = builder.Entity<User>(entity =>
         {
-            entity.ToTable("Users");
-            entity.HasKey(u => u.Id);
-            entity.Property(u => u.Id).ValueGeneratedNever();
-            entity.Property(u => u.Email).IsRequired();
-            entity.Property(u => u.Username).IsRequired();
+            _ = entity.ToTable("Users");
+            _ = entity.HasKey(u => u.Id);
+            _ = entity.Property(u => u.Id).ValueGeneratedNever();
+            _ = entity.Property(u => u.Email).IsRequired();
+            _ = entity.Property(u => u.Username).IsRequired();
         });
 
-        builder.Entity<PlantGroup>(entity =>
+        _ = builder.Entity<PlantGroup>(entity =>
         {
-            entity.ToTable("PlantGroups");
-            entity.HasKey(p => p.Id);
-            entity.Property(p => p.Id).ValueGeneratedNever();
-            entity.Property(p => p.Name).IsRequired();
-            entity.Property(p => p.Type).IsRequired();
-            entity.Property(p => p.CreatedAt).IsRequired();
-            entity.Property(p => p.UpdatedAt).IsRequired();
+            _ = entity.ToTable("PlantGroups");
+            _ = entity.HasKey(p => p.Id);
+            _ = entity.Property(p => p.Id).ValueGeneratedNever();
+            _ = entity.Property(p => p.Name).IsRequired();
+            _ = entity.Property(p => p.Type).IsRequired();
+            _ = entity.Property(p => p.CreatedAt).IsRequired();
+            _ = entity.Property(p => p.UpdatedAt).IsRequired();
         });
     }
 }

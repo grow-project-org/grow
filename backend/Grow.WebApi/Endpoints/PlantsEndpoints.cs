@@ -17,8 +17,8 @@ public static class PlantsEndpoints
     {
         var group = app.MapGroup("/api/plants").WithTags("Plants");
 
-        group.MapPost("/", CreatePlant);
-        group.MapPost("/{id:guid}/events", CreatePlant);
+        _ = group.MapPost("/", CreatePlant);
+        _ = group.MapPost("/{id:guid}/events", AddEvent);
 
         return app;
     }

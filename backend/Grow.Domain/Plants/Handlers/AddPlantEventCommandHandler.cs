@@ -12,6 +12,6 @@ public class AddPlantEventCommandHandler(IDatabaseContext context) : ICommandHan
     {
         var plant = await context.Plants.FirstAsync(x => x.Id == command.PlantId, ct);
         plant.AddEvent(command.ActionLogId, command.Type, command.ExecutedAt);
-        await context.SaveChangesAsync(ct);
+        _ = await context.SaveChangesAsync(ct);
     }
 }

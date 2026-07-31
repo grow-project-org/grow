@@ -21,7 +21,7 @@ public class CreatePlantCommandHandler(IDatabaseContext context) : ICommandHandl
 
         var plants = Plant.Create(command.Id, command.CustomId, command.SpecieId);
 
-        context.Plants.Add(plants);
-        await context.SaveChangesAsync(ct);
+        _ = context.Plants.Add(plants);
+        _ = await context.SaveChangesAsync(ct);
     }
 }
