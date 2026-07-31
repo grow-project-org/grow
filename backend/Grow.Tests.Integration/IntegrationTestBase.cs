@@ -1,4 +1,7 @@
-﻿namespace Grow.Tests.Integration;
+﻿using Grow.WebApi.Endpoints;
+using System.Net.Http.Json;
+
+namespace Grow.Tests.Integration;
 
 public abstract class IntegrationTestBase
 {
@@ -17,5 +20,15 @@ public abstract class IntegrationTestBase
     {
         this.client.Dispose();
         this.factory.Dispose();
+    }
+
+    protected async Task<Guid> CreatePlantAsync(string? customId = null, Guid? specieId = null)
+    {
+        var request = new CreatePlantRequest(customId ?? $"plant-{Guid.NewGuid()}", specieId ?? Guid.NewGuid());
+        var response = await this.client.PostAsJsonAsync("/api/plants", request);
+        _ = response.EnsureSuccessStatusCode();
+
+        var result = await response.Content.ReadFromJsonAsync<CreatePlantResponse>();
+        return result!.CreatedPlantId;
     }
 }

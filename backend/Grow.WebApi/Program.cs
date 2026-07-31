@@ -1,5 +1,4 @@
 using Grow.Cqrs;
-using Grow.Domain;
 using Grow.Infrastructure.Database;
 using Grow.WebApi.Endpoints;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -9,26 +8,20 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(policy =>
+builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
         policy
             .WithOrigins(["http://localhost:5173"])
             .WithMethods("GET", "POST")
             .WithHeaders("Content-Type", "X-CSRF-TOKEN")
             .AllowCredentials()
-            .SetPreflightMaxAge(TimeSpan.FromMinutes(10)));
-});
+            .SetPreflightMaxAge(TimeSpan.FromMinutes(10))));
 
 builder.Services.AddOpenApi();
 builder.Services.RegisterCqrs();
 
 builder.Services.AddValidation();
 
-builder.Services.AddMemoryCache(options =>
-{
-    options.ExpirationScanFrequency = TimeSpan.FromMinutes(5);
-});
+builder.Services.AddMemoryCache(options => options.ExpirationScanFrequency = TimeSpan.FromMinutes(5));
 
 var postgresConnectionString = builder.Configuration.GetConnectionString("Postgres")
     ?? throw new InvalidOperationException("Missing ConnectionStrings:Postgres configuration.");
@@ -52,7 +45,7 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    _ = app.MapOpenApi();
 }
 
 app.UseCors();
