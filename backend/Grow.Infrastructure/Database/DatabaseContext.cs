@@ -14,6 +14,7 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbCont
     public DbSet<Specie> Species { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<PlantGroup> PlantGroups { get; set; }
+    public DbSet<PlantEvent> PlantEvents { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -30,19 +31,19 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbCont
                 .WithMany(pg => pg.Plants)
                 .UsingEntity(j => j.ToTable("PlantGroupPlants"));
 
-            entity.HasMany(p => p.PlantActionLogs)
+            entity.HasMany(p => p.Events)
                 .WithOne()
-                .HasForeignKey("PlantId")
+                .HasForeignKey(x => x.PlantId)
                 .IsRequired();
 
-            entity.Navigation(p => p.PlantActionLogs)
-                .HasField("plantActionLogs")
+            entity.Navigation(p => p.Events)
+                .HasField("PlantEvents")
                 .UsePropertyAccessMode(PropertyAccessMode.Field);
         });
 
-        builder.Entity<PlantActionLog>(entity =>
+        builder.Entity<PlantEvent>(entity =>
         {
-            entity.ToTable("PlantActionLogs");
+            entity.ToTable("PlantEvents");
             entity.HasKey(p => p.Id);
             entity.Property(p => p.Id).ValueGeneratedNever();
             entity.Property(p => p.Type).IsRequired();

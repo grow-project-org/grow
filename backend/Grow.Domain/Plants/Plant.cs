@@ -1,10 +1,11 @@
-﻿using System.Collections.ObjectModel;
+﻿using Grow.Domain.Commons;
+using System.Collections.ObjectModel;
 
 namespace Grow.Domain.Plants;
 
 public class Plant
 {
-    private readonly Collection<PlantActionLog> plantActionLogs = [];
+    private readonly Collection<PlantEvent> events = [];
 
     public Guid Id { get; private set; }
     /// <summary>
@@ -12,7 +13,7 @@ public class Plant
     /// </summary>
     public string CustomId { get; private set; }
     public Guid SpecieId { get; private set; }
-    public IReadOnlyCollection<PlantActionLog> PlantActionLogs => this.plantActionLogs;
+    public IReadOnlyCollection<PlantEvent> Events => this.events;
 
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; private set; } = DateTime.UtcNow;
@@ -41,9 +42,10 @@ public class Plant
         this.UpdatedAt = DateTime.UtcNow;
     }
 
-    public void AddActionLog(PlantActionLog actionLog)
+    public void AddEvent(Guid id, PlantActionType type, DateTime executedAt)
     {
-        this.plantActionLogs.Add(actionLog);
+        var @event = new PlantEvent(this.Id, id, type, executedAt);
+        this.events.Add(@event);
         this.UpdatedAt = DateTime.UtcNow;
     }
 }
