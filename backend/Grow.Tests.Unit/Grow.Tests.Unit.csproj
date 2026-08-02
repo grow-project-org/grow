@@ -30,6 +30,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Grow.Domain\Grow.Domain.csproj" />
     <ProjectReference Include="..\Grow.Infrastructure\Grow.Infrastructure.csproj" />
+    <ProjectReference Include="..\Grow.Logging\Grow.Logging.csproj" />
   </ItemGroup>
 
 </Project>
