@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Grow.Logging;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Grow.Cqrs;
@@ -23,6 +24,8 @@ public sealed class Dispatcher(IServiceProvider serviceProvider, ILogger<Dispatc
         ct.ThrowIfCancellationRequested();
         using var scope = serviceProvider.CreateScope();
         var handler = scope.ServiceProvider.GetRequiredService<ICommandHandler<TCommand>>();
+
+        logger.ExecutingCommand(typeof(TCommand).Name);
 
         return handler.HandleAsync(command, ct);
     }

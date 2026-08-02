@@ -12,4 +12,8 @@
     <PackageReference Include="Scrutor" Version="7.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Grow.Logging\Grow.Logging.csproj" />
+  </ItemGroup>
+
 </Project>
