@@ -11,6 +11,12 @@ public record CreatePlantResponse(Guid CreatedPlantId);
 public record AddEventRequest(Guid PlantId, PlantActionType Type, DateTime ExecutedAt);
 public record AddEventResponse(Guid PlantEventId);
 
+public record AddPlantToGroupRequest(Guid PlantGroupId, Guid PlantId);
+public record AddPlantToGroupResponse(Guid PlantGroupId, Guid PlantId);
+
+public record RemovePlantFromGroupRequest(Guid PlantGroupId, Guid PlantId);
+public record RemovePlantFromGroupResponse(Guid PlantGroupId, Guid PlantId);
+
 public static class PlantsEndpoints
 {
     public static IEndpointRouteBuilder MapPlantsEndpoints(this IEndpointRouteBuilder app)
@@ -19,8 +25,26 @@ public static class PlantsEndpoints
 
         _ = group.MapPost("/", CreatePlant);
         _ = group.MapPost("/{id:guid}/events", AddEvent);
+        _ = group.MapPost("/{plantId:guid}/groups/{plantGroupId:guid}", AddToGroup);
+        _ = group.MapDelete("/{plantId:guid}/groups/{plantGroupId:guid}", RemoveFromGroup);
 
         return app;
+    }
+
+    public static async Task<RemovePlantFromGroupResponse> RemoveFromGroup(IDispatcher dispatcher, [FromBody] RemovePlantFromGroupRequest request, CancellationToken ct)
+    {
+        await dispatcher.SendAsync(
+            new RemovePlantFromGroupCommand(request.PlantGroupId, request.PlantId), ct);
+        return new(
+            request.PlantGroupId, request.PlantId);
+    }
+
+    public static async Task<AddPlantToGroupResponse> AddToGroup(IDispatcher dispatcher, [FromBody] AddPlantToGroupRequest request, CancellationToken ct)
+    {
+        await dispatcher.SendAsync(
+            new AddPlantToGroupCommand(request.PlantGroupId, request.PlantId), ct);
+        return new(
+            request.PlantGroupId, request.PlantId);
     }
 
     public static async Task<CreatePlantResponse> CreatePlant(IDispatcher dispatcher, [FromBody] CreatePlantRequest request, CancellationToken ct)
