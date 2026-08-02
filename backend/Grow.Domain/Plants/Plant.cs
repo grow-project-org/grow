@@ -35,7 +35,6 @@ public class Plant
         if (!this._plantGroups.Contains(pg))
         {
             this._plantGroups.Add(pg);
-            pg.AddPlant(this);
             this.UpdatedAt = DateTime.UtcNow;
         }
     }
@@ -45,7 +44,6 @@ public class Plant
         if (this._plantGroups.Contains(pg))
         {
             this._plantGroups.Remove(pg);
-            pg.RemovePlant(this);
             this.UpdatedAt = DateTime.UtcNow;
         }
     }

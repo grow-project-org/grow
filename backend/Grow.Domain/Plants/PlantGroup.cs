@@ -29,6 +29,7 @@ public class PlantGroup
         if (!this._plants.Contains(plant))
         {
             this._plants.Add(plant);
+            plant.AddToGroup(this);
             this.UpdatedAt = DateTime.UtcNow;
         }
     }
@@ -37,6 +38,7 @@ public class PlantGroup
     {
         if (this._plants.Remove(plant))
         {
+            plant.RemoveFromGroup(this);
             this.UpdatedAt = DateTime.UtcNow;
         }
     }
