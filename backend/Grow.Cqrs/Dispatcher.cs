@@ -1,8 +1,9 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Grow.Cqrs;
 
-public sealed class Dispatcher(IServiceProvider serviceProvider) : IDispatcher
+public sealed class Dispatcher(IServiceProvider serviceProvider, ILogger<Dispatcher> logger) : IDispatcher
 {
     public Task<TResult> QueryAsync<TQuery, TResult>(TQuery query, CancellationToken ct)
         where TQuery : IQuery<TResult>
@@ -10,6 +11,8 @@ public sealed class Dispatcher(IServiceProvider serviceProvider) : IDispatcher
         ct.ThrowIfCancellationRequested();
         using var scope = serviceProvider.CreateScope();
         var handler = scope.ServiceProvider.GetRequiredService<IQueryHandler<TQuery, TResult>>();
+
+        logger.ExecutingQuery(typeof(TQuery).Name);
 
         return handler.HandleAsync(query, ct);
     }
