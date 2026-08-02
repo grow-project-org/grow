@@ -10,8 +10,8 @@ public class PlantGroup
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; private set; } = DateTime.UtcNow;
 
-    private readonly Collection<Plant> _plants = [];
-    public IReadOnlyCollection<Plant> Plants => this._plants;
+    private readonly Collection<Guid> _plantIds = [];
+    public IReadOnlyCollection<Guid> PlantIds => this._plantIds;
 
     private PlantGroup(Guid id, string name, GroupType type)
     {
@@ -24,25 +24,25 @@ public class PlantGroup
     public static PlantGroup CreateRegion(Guid id, string name) => new(id, name, GroupType.Region);
     public static PlantGroup CreateTemporaryGroup(Guid id, string name) => new(id, name, GroupType.TemporaryGroup);
 
-    public void AddPlant(Plant plant)
+    public void AddPlant(Guid plantId)
     {
-        if (this._plants.Contains(plant))
+        if (this._plantIds.Contains(plantId))
         {
             return;    
         }
 
-        this._plants.Add(plant);
+        this._plantIds.Add(plantId);
         this.UpdatedAt = DateTime.UtcNow;
     }
 
-    public void RemovePlant(Plant plant)
+    public void RemovePlant(Guid plantId)
     {
-        if (!this._plants.Contains(plant))
+        if (!this._plantIds.Contains(plantId))
         {
             return;
         }
 
-        this._plants.Remove(plant);
+        this._plantIds.Remove(plantId);
         this.UpdatedAt = DateTime.UtcNow;
     }
 }

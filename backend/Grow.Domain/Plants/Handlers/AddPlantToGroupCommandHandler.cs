@@ -11,12 +11,9 @@ public class AddPlantToGroupCommandHandler(IDatabaseContext context) : ICommandH
     {
         var plantGroup = await context.PlantGroups
             .FirstAsync(x => x.Id == command.PlantGroupId, ct);
-
         var plant = await context.Plants
             .FirstAsync(x => x.Id == command.PlantId, ct);
-
-        plantGroup.AddPlant(plant);
-
+        plantGroup.AddPlant(plant.Id);
         _ = await context.SaveChangesAsync(ct);
     }
 }

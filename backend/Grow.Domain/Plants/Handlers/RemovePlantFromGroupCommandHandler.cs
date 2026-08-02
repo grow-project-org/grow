@@ -11,12 +11,9 @@ public class RemovePlantFromGroupCommandHandler(IDatabaseContext context) : ICom
     {
         var plantGroup = await context.PlantGroups
             .FirstAsync(x => x.Id == command.PlantGroupId, ct);
-
         var plant = await context.Plants
             .FirstAsync(x => x.Id == command.PlantId, ct);
-
-        plantGroup.RemovePlant(plant);
-
+        plantGroup.RemovePlant(plant.Id);
         _ = await context.SaveChangesAsync(ct);
     }
 }
