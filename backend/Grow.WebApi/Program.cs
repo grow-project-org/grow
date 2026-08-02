@@ -1,5 +1,6 @@
 using Grow.Cqrs;
 using Grow.Infrastructure.Database;
+using Grow.Logging;
 using Grow.WebApi.Endpoints;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +19,7 @@ builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
 
 builder.Services.AddOpenApi();
 builder.Services.RegisterCqrs();
+builder.Services.RegisterLogging();
 
 builder.Services.AddValidation();
 
