@@ -30,6 +30,26 @@ public class Plant
 
     public static Plant Create(Guid id, string customId, Guid specieId) => new(id, customId, specieId);
 
+    public void AddToGroup(PlantGroup pg)
+    {
+        if (!this._plantGroups.Contains(pg))
+        {
+            this._plantGroups.Add(pg);
+            pg.AddPlant(this);
+            this.UpdatedAt = DateTime.UtcNow;
+        }
+    }
+
+    public void RemoveFromGroup(PlantGroup pg)
+    {
+        if (this._plantGroups.Contains(pg))
+        {
+            this._plantGroups.Remove(pg);
+            pg.RemovePlant(this);
+            this.UpdatedAt = DateTime.UtcNow;
+        }
+    }
+
     public void SetCustomId(string customId)
     {
         this.CustomId = customId;
