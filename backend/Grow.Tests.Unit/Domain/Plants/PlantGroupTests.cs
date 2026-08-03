@@ -19,7 +19,7 @@ public class PlantGroupTests
             Assert.That(group.Id, Is.EqualTo(id));
             Assert.That(group.Name, Is.EqualTo("Balcony"));
             Assert.That(group.Type, Is.EqualTo(GroupType.WorkGroup));
-            Assert.That(group.Plants, Is.Empty);
+            Assert.That(group.PlantIds, Is.Empty);
         }
     }
 
@@ -37,12 +37,12 @@ public class PlantGroupTests
         var group = PlantGroup.CreateWorkGroup(Guid.NewGuid(), "Balcony");
         var plant = CreateSamplePlant();
 
-        group.AddPlant(plant);
+        group.AddPlant(plant.Id);
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(group.Plants, Has.Count.EqualTo(1));
-            Assert.That(group.Plants, Does.Contain(plant));
+            Assert.That(group.PlantIds, Has.Count.EqualTo(1));
+            Assert.That(group.PlantIds, Does.Contain(plant.Id));
         }
     }
 
@@ -51,11 +51,11 @@ public class PlantGroupTests
     {
         var group = PlantGroup.CreateWorkGroup(Guid.NewGuid(), "Balcony");
         var plant = CreateSamplePlant();
-        group.AddPlant(plant);
+        group.AddPlant(plant.Id);
 
-        group.AddPlant(plant);
+        group.AddPlant(plant.Id);
 
-        Assert.That(group.Plants, Has.Count.EqualTo(1));
+        Assert.That(group.PlantIds, Has.Count.EqualTo(1));
     }
 
     [Test]
@@ -63,11 +63,11 @@ public class PlantGroupTests
     {
         var group = PlantGroup.CreateWorkGroup(Guid.NewGuid(), "Balcony");
         var plant = CreateSamplePlant();
-        group.AddPlant(plant);
+        group.AddPlant(plant.Id);
 
-        group.RemovePlant(plant);
+        group.RemovePlant(plant.Id);
 
-        Assert.That(group.Plants, Is.Empty);
+        Assert.That(group.PlantIds, Is.Empty);
     }
 
     [Test]
@@ -75,6 +75,6 @@ public class PlantGroupTests
     {
         var group = PlantGroup.CreateWorkGroup(Guid.NewGuid(), "Balcony");
 
-        Assert.DoesNotThrow(() => group.RemovePlant(CreateSamplePlant()));
+        Assert.DoesNotThrow(() => group.RemovePlant(CreateSamplePlant().Id));
     }
 }

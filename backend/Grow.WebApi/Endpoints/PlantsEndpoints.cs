@@ -1,5 +1,6 @@
 ﻿using Grow.Cqrs;
 using Grow.Domain.Commons;
+using Grow.Domain.Plants;
 using Grow.Domain.Plants.Handlers;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,6 +17,9 @@ public record AddPlantToGroupResponse(Guid PlantGroupId, Guid PlantId);
 
 public record RemovePlantFromGroupRequest(Guid PlantGroupId, Guid PlantId);
 public record RemovePlantFromGroupResponse(Guid PlantGroupId, Guid PlantId);
+
+public record CreatePlantGroupRequest(string name, GroupType type);
+public record CreatePlantGroupResponse(Guid CreatedPlantGroupId);
 
 public static class PlantsEndpoints
 {
