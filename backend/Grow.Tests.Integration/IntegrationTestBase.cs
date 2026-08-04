@@ -24,7 +24,7 @@ public abstract class IntegrationTestBase
 
     protected async Task<Guid> CreatePlantAsync(string? customId = null, Guid? specieId = null)
     {
-        var request = new CreatePlantRequest(customId ?? $"plant-{Guid.NewGuid()}", specieId ?? Guid.NewGuid());
+        var request = new CreatePlantRequest(customId ?? $"plant-{Guid.NewGuid()}", specieId ?? await this.CreateSpecieAsync());
         var response = await this.client.PostAsJsonAsync("/api/plants", request);
         _ = response.EnsureSuccessStatusCode();
 

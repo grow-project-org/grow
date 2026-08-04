@@ -28,6 +28,15 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbCont
             _ = entity.Property(p => p.CreatedAt).IsRequired();
             _ = entity.Property(p => p.UpdatedAt).IsRequired();
 
+            _ = entity.HasOne<Specie>()
+                .WithMany()
+                .HasForeignKey(p => p.SpecieId)
+                .IsRequired();
+
+            _ = entity.HasMany(p => p.PlantGroups)
+                .WithMany(pg => pg.Plants)
+                .UsingEntity(j => j.ToTable("PlantGroupPlants"));
+                
             _ = entity.HasMany(p => p.Events)
                 .WithOne()
                 .HasForeignKey(x => x.PlantId)
