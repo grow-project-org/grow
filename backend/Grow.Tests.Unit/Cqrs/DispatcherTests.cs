@@ -1,5 +1,4 @@
-using Grow.Cqrs;
-using Grow.Logging;
+using Grow.Infrastructure.Cqrs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;

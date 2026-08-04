@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
-namespace Grow.Logging;
+namespace Grow.Infrastructure.Logging;
 
 public static class LoggingModule
 {
@@ -13,6 +13,6 @@ public static class LoggingModule
 
         Log.Logger = logger;
 
-        services.AddSerilog(logger);
+        _ = services.AddSerilog(logger);
     }
 }

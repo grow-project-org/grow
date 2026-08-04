@@ -1,4 +1,4 @@
-# Grow.Infrastructure
+# Grow.Infrastructure.Database
 
 Zawiera `DatabaseContext` (EF Core + Npgsql) oraz migracje bazy danych.
 
@@ -24,23 +24,23 @@ dotnet tool install --global dotnet-ef
 ## Tworzenie migracji
 
 Uruchamiaj z katalogu `backend`. Zarówno `--project`, jak i `--startup-project`
-muszą wskazywać na `Grow.Infrastructure` (dzięki `DatabaseContextFactory` narzędzie
+muszą wskazywać na `Grow.Infrastructure.Database` (dzięki `DatabaseContextFactory` narzędzie
 nie potrzebuje uruchamiać hosta `Grow.WebApi`):
 
 ```bash
-dotnet ef migrations add <NazwaMigracji> --project Grow.Infrastructure --startup-project Grow.Infrastructure --output-dir Database/Migrations
+dotnet ef migrations add <NazwaMigracji> --project Grow.Infrastructure.Database --startup-project Grow.Infrastructure.Database --output-dir Migrations
 ```
 
 Przykład:
 
 ```bash
-dotnet ef migrations add InitialCreate --project Grow.Infrastructure --startup-project Grow.Infrastructure --output-dir Database/Migrations
+dotnet ef migrations add InitialCreate --project Grow.Infrastructure.Database --startup-project Grow.Infrastructure.Database --output-dir Migrations
 ```
 
 ## Odpalanie migracji (update bazy)
 
 ```bash
-dotnet ef database update --project Grow.Infrastructure --startup-project Grow.Infrastructure
+dotnet ef database update --project Grow.Infrastructure.Database --startup-project Grow.Infrastructure.Database
 ```
 
 Migracje można też stosować automatycznie przy starcie aplikacji, wywołując
@@ -51,17 +51,17 @@ Migracje można też stosować automatycznie przy starcie aplikacji, wywołując
 Cofnięcie ostatniej niezaaplikowanej migracji (usuwa plik migracji):
 
 ```bash
-dotnet ef migrations remove --project Grow.Infrastructure --startup-project Grow.Infrastructure
+dotnet ef migrations remove --project Grow.Infrastructure.Database --startup-project Grow.Infrastructure.Database
 ```
 
 Lista migracji:
 
 ```bash
-dotnet ef migrations list --project Grow.Infrastructure --startup-project Grow.Infrastructure
+dotnet ef migrations list --project Grow.Infrastructure.Database --startup-project Grow.Infrastructure.Database
 ```
 
 Cofnięcie bazy do konkretnej migracji (lub `0`, żeby cofnąć wszystkie):
 
 ```bash
-dotnet ef database update <NazwaMigracji> --project Grow.Infrastructure --startup-project Grow.Infrastructure
+dotnet ef database update <NazwaMigracji> --project Grow.Infrastructure.Database --startup-project Grow.Infrastructure.Database
 ```

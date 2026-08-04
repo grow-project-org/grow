@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace Grow.Logging;
+namespace Grow.Infrastructure.Logging;
 
 public static partial class LoggerExtensions
 {

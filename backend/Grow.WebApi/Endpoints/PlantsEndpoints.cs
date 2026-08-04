@@ -1,7 +1,7 @@
-﻿using Grow.Cqrs;
 using Grow.Domain.Commons;
 using Grow.Domain.Plants;
 using Grow.Domain.Plants.Handlers;
+using Grow.Infrastructure.Cqrs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Grow.WebApi.Endpoints;

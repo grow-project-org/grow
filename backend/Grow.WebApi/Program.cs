@@ -1,6 +1,6 @@
-using Grow.Cqrs;
+using Grow.Infrastructure.Cqrs;
 using Grow.Infrastructure.Database;
-using Grow.Logging;
+using Grow.Infrastructure.Logging;
 using Grow.WebApi.Endpoints;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;

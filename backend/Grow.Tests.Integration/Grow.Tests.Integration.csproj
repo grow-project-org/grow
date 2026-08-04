@@ -24,7 +24,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Grow.Logging\Grow.Logging.csproj" />
     <ProjectReference Include="..\Grow.WebApi\Grow.WebApi.csproj" />
   </ItemGroup>
 

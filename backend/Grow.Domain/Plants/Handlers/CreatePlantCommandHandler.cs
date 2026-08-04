@@ -1,4 +1,4 @@
-﻿using Grow.Cqrs;
+﻿using Grow.Infrastructure.Cqrs;
 using Microsoft.EntityFrameworkCore;
 
 namespace Grow.Domain.Plants.Handlers;
@@ -10,7 +10,7 @@ public class CreatePlantCommandHandler(IDatabaseContext context) : ICommandHandl
     public async Task HandleAsync(CreatePlantCommand command, CancellationToken ct)
     {
         var customIdAlreadyExists = await context.Plants
-            .AnyAsync(p => p.CustomId == command.CustomId);
+            .AnyAsync(p => p.CustomId == command.CustomId, ct);
 
         if (customIdAlreadyExists)
         {
