@@ -15,10 +15,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Grow.Commons\Grow.Commons.csproj" />
-    <ProjectReference Include="..\Grow.Cqrs\Grow.Cqrs.csproj" />
     <ProjectReference Include="..\Grow.Domain\Grow.Domain.csproj" />
-    <ProjectReference Include="..\Grow.Infrastructure\Grow.Infrastructure.csproj" />
-    <ProjectReference Include="..\Grow.Logging\Grow.Logging.csproj" />
+    <ProjectReference Include="..\Grow.Infrastructure.Database\Grow.Infrastructure.Database.csproj" />
   </ItemGroup>
 
 </Project>

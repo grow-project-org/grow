@@ -1,4 +1,4 @@
-﻿namespace Grow.Cqrs;
+﻿namespace Grow.Infrastructure.Cqrs;
 
 public interface ICommandHandler<TCommand> where TCommand : ICommand
 {

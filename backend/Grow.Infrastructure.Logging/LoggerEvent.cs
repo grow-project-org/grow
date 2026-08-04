@@ -1,4 +1,4 @@
-﻿namespace Grow.Logging;
+﻿namespace Grow.Infrastructure.Logging;
 
 public enum LoggerEvent
 {

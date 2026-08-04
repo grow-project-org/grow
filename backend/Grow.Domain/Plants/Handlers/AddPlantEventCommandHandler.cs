@@ -1,5 +1,5 @@
-﻿using Grow.Cqrs;
-using Grow.Domain.Commons;
+﻿using Grow.Domain.Commons;
+using Grow.Infrastructure.Cqrs;
 using Microsoft.EntityFrameworkCore;
 
 namespace Grow.Domain.Plants.Handlers;
