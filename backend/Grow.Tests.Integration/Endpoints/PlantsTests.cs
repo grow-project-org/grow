@@ -12,7 +12,8 @@ public class PlantsTests : IntegrationTestBase
     [Test]
     public async Task CreatePlant_ShouldReturnPlantId()
     {
-        var newPlantCommand = new CreatePlantRequest($"monstera-{Guid.NewGuid()}", Guid.NewGuid());
+        var specieId = await this.CreateSpecieAsync();
+        var newPlantCommand = new CreatePlantRequest($"monstera-{Guid.NewGuid()}", specieId);
 
         var response = await this.client.PostAsJsonAsync("/api/plants", newPlantCommand);
         var result = await response.Content.ReadFromJsonAsync<CreatePlantResponse>();
@@ -30,7 +31,7 @@ public class PlantsTests : IntegrationTestBase
     public async Task CreatePlant_ShouldPersistPlantWithGivenCustomIdAndSpecieId()
     {
         var customId = $"monstera-{Guid.NewGuid()}";
-        var specieId = Guid.NewGuid();
+        var specieId = await this.CreateSpecieAsync();
         var newPlantCommand = new CreatePlantRequest(customId, specieId);
 
         var response = await this.client.PostAsJsonAsync("/api/plants", newPlantCommand);
@@ -48,15 +49,25 @@ public class PlantsTests : IntegrationTestBase
     }
 
     [Test]
-    public void CreatePlant_WithDuplicateCustomId_ShouldThrowArgumentException()
+    public async Task CreatePlant_WithDuplicateCustomId_ShouldThrowArgumentException()
     {
-        var newPlantCommand = new CreatePlantRequest($"monstera-{Guid.NewGuid()}", Guid.NewGuid());
+        var specieId = await this.CreateSpecieAsync();
+        var newPlantCommand = new CreatePlantRequest($"monstera-{Guid.NewGuid()}", specieId);
 
         _ = Assert.CatchAsync<ArgumentException>(async () =>
         {
             _ = await this.client.PostAsJsonAsync("/api/plants", newPlantCommand);
             _ = await this.client.PostAsJsonAsync("/api/plants", newPlantCommand);
         });
+    }
+
+    [Test]
+    public void CreatePlant_WhenSpecieDoesNotExist_ShouldThrowArgumentException()
+    {
+        var newPlantCommand = new CreatePlantRequest($"monstera-{Guid.NewGuid()}", Guid.NewGuid());
+
+        _ = Assert.CatchAsync<ArgumentException>(() =>
+            this.client.PostAsJsonAsync("/api/plants", newPlantCommand));
     }
 
     [Test]
