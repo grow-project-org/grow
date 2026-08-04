@@ -27,11 +27,6 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbCont
             _ = entity.Property(p => p.SpecieId).IsRequired();
             _ = entity.Property(p => p.CreatedAt).IsRequired();
             _ = entity.Property(p => p.UpdatedAt).IsRequired();
-            _ = entity.Property<List<Guid>>("PlantIds")
-                .HasConversion(
-                    x => JsonConvert.SerializeObject(x),
-                    x => JsonConvert.DeserializeObject<List<Guid>>(x)!
-                );
 
             _ = entity.HasMany(p => p.Events)
                 .WithOne()
