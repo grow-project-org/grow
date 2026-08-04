@@ -1,5 +1,8 @@
 # Grow — domena
 
+[![Backend CI](https://github.com/grow-project-org/grow/actions/workflows/backend-ci.yml/badge.svg?branch=main)](https://github.com/grow-project-org/grow/actions/workflows/backend-ci.yml)
+[![codecov](https://codecov.io/gh/grow-project-org/grow/graph/badge.svg?flag=backend)](https://codecov.io/gh/grow-project-org/grow)
+
 Model domeny aplikacji do zarządzania uprawą roślin.
 
 ## Kontekst i aktorzy

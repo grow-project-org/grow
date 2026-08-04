@@ -29,5 +29,14 @@ jobs:
       - name: Build
         run: dotnet build Grow.slnx --configuration Release --no-restore
 
-      - name: Test
-        run: dotnet test Grow.slnx --configuration Release --no-build
+      - name: Test with coverage
+        run: dotnet test Grow.slnx --configuration Release --no-build --results-directory ./coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          directory: backend/coverage
+          flags: backend
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+          verbose: true
