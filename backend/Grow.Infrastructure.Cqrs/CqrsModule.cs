@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 
-namespace Grow.Cqrs;
+namespace Grow.Infrastructure.Cqrs;
 
 public static class CqrsModule
 {

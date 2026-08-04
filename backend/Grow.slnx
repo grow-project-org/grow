@@ -1,5 +1,10 @@
 <Solution>
-  <Folder Name="/SolutionItems/">
+  <Folder Name="/Infrastructure/">
+    <Project Path="Grow.Infrastructure.Cqrs/Grow.Infrastructure.Cqrs.csproj" />
+    <Project Path="Grow.Infrastructure.Database/Grow.Infrastructure.Database.csproj" />
+    <Project Path="Grow.Infrastructure.Logging/Grow.Infrastructure.Logging.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
     <File Path=".gitignore" />
   </Folder>
@@ -8,9 +13,6 @@
     <Project Path="Grow.Tests.Unit/Grow.Tests.Unit.csproj" />
   </Folder>
   <Project Path="Grow.Commons/Grow.Commons.csproj" Id="4b5a44cd-e917-488c-8025-50a319bb46af" />
-  <Project Path="Grow.Cqrs/Grow.Cqrs.csproj" Id="daeed4b6-85d5-4994-994a-d00e9dc750ac" />
   <Project Path="Grow.Domain/Grow.Domain.csproj" Id="5b1cf383-3c0f-4ad2-8206-e454f14cb15b" />
-  <Project Path="Grow.Infrastructure/Grow.Infrastructure.csproj" Id="14800a96-ad5a-4257-aad7-dc4eb82fdf74" />
-  <Project Path="Grow.Logging/Grow.Logging.csproj" Id="50094b14-fc57-41a9-826b-286f1ab9b39c" />
   <Project Path="Grow.WebApi/Grow.WebApi.csproj" Id="dfaf880c-3ab0-4192-b40d-fb4be1d97aec" />
 </Solution>

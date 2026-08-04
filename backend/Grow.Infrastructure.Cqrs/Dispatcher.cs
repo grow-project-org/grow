@@ -1,8 +1,8 @@
-﻿using Grow.Logging;
+﻿using Grow.Infrastructure.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace Grow.Cqrs;
+namespace Grow.Infrastructure.Cqrs;
 
 public sealed class Dispatcher(IServiceProvider serviceProvider, ILogger<Dispatcher> logger) : IDispatcher
 {
