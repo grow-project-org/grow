@@ -18,7 +18,7 @@ public record AddPlantToGroupResponse(Guid PlantGroupId, Guid PlantId);
 public record RemovePlantFromGroupRequest(Guid PlantGroupId, Guid PlantId);
 public record RemovePlantFromGroupResponse(Guid PlantGroupId, Guid PlantId);
 
-public record CreatePlantGroupRequest(string name, GroupType type);
+public record CreatePlantGroupRequest(string Name, GroupType Type);
 public record CreatePlantGroupResponse(Guid CreatedPlantGroupId);
 
 public static class PlantsEndpoints
@@ -32,7 +32,25 @@ public static class PlantsEndpoints
         _ = group.MapPost("/{plantId:guid}/groups/{plantGroupId:guid}", AddToGroup);
         _ = group.MapDelete("/{plantId:guid}/groups/{plantGroupId:guid}", RemoveFromGroup);
 
+        var plantGroup = app.MapGroup("/api/plant-groups").WithTags("Plant Groups");
+
+        _ = plantGroup.MapPost("/", CreateGroup);
+
         return app;
+    }
+
+    public static async Task<CreatePlantGroupResponse> CreateGroup(IDispatcher dispatcher, [FromBody] CreatePlantGroupRequest request, CancellationToken ct)
+    {
+        var id = Guid.CreateVersion7();
+
+        await dispatcher.SendAsync(
+            new CreatePlantGroupCommand(
+                id,
+                request.Name,
+                request.Type),
+            ct);
+
+        return new(id);
     }
 
     public static async Task<RemovePlantFromGroupResponse> RemoveFromGroup(IDispatcher dispatcher, [FromBody] RemovePlantFromGroupRequest request, CancellationToken ct)
