@@ -28,14 +28,13 @@ public static class PlantsEndpoints
         var group = app.MapGroup("/api/plants").WithTags("Plants");
 
         _ = group.MapPost("/", CreatePlant);
-        _ = group.MapPost("/{id:guid}/events", AddEvent);
+        _ = group.MapPost("/{plantId:guid}/events", AddEvent);
         _ = group.MapPost("/{plantId:guid}/groups/{plantGroupId:guid}", AddToGroup);
         _ = group.MapDelete("/{plantId:guid}/groups/{plantGroupId:guid}", RemoveFromGroup);
 
         var plantGroup = app.MapGroup("/api/plant-groups").WithTags("Plant Groups");
 
         _ = plantGroup.MapPost("/", CreateGroup);
-        _ = group.MapPost("/{plantId:guid}/events", AddEvent);
 
         return app;
     }
