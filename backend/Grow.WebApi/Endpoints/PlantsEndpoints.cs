@@ -9,7 +9,7 @@ namespace Grow.WebApi.Endpoints;
 public record CreatePlantRequest(string CustomId, Guid SpecieId);
 public record CreatePlantResponse(Guid CreatedPlantId);
 
-public record AddEventRequest(Guid PlantId, PlantActionType Type, DateTime ExecutedAt);
+public record AddEventRequest(PlantActionType Type, DateTime ExecutedAt);
 public record AddEventResponse(Guid PlantEventId);
 
 public record AddPlantToGroupRequest(Guid PlantGroupId, Guid PlantId);
@@ -35,6 +35,7 @@ public static class PlantsEndpoints
         var plantGroup = app.MapGroup("/api/plant-groups").WithTags("Plant Groups");
 
         _ = plantGroup.MapPost("/", CreateGroup);
+        _ = group.MapPost("/{plantId:guid}/events", AddEvent);
 
         return app;
     }
@@ -76,10 +77,10 @@ public static class PlantsEndpoints
         return new(id);
     }
 
-    public static async Task<AddEventResponse> AddEvent(IDispatcher dispatcher, [FromBody] AddEventRequest request, CancellationToken ct)
+    public static async Task<AddEventResponse> AddEvent(IDispatcher dispatcher, [FromRoute] Guid plantId, [FromBody] AddEventRequest request, CancellationToken ct)
     {
         var id = Guid.CreateVersion7();
-        await dispatcher.SendAsync(new AddPlantEventCommand(request.PlantId, id, request.Type, request.ExecutedAt), ct);
+        await dispatcher.SendAsync(new AddPlantEventCommand(plantId, id, request.Type, request.ExecutedAt), ct);
         return new(id);
     }
 }

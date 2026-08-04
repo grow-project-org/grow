@@ -85,6 +85,8 @@ app.MapHealthChecks("/hc", new HealthCheckOptions()
 
 app.UseHttpsRedirection();
 
-app.MapPlantsEndpoints();
+app
+    .MapPlantsEndpoints()
+    .MapSpeciesEndpoints();
 
 app.Run();

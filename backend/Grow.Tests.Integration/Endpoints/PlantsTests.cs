@@ -64,7 +64,7 @@ public class PlantsTests : IntegrationTestBase
     {
         var plantId = await this.CreatePlantAsync();
         var executedAt = DateTime.UtcNow.AddHours(-1);
-        var addEventRequest = new AddEventRequest(plantId, PlantActionType.Watering, executedAt);
+        var addEventRequest = new AddEventRequest(PlantActionType.Watering, executedAt);
 
         var response = await this.client.PostAsJsonAsync($"/api/plants/{plantId}/events", addEventRequest);
         var result = await response.Content.ReadFromJsonAsync<AddEventResponse>();
@@ -94,7 +94,7 @@ public class PlantsTests : IntegrationTestBase
     [Test]
     public void AddEvent_WhenPlantDoesNotExist_ShouldThrow()
     {
-        var addEventRequest = new AddEventRequest(Guid.NewGuid(), PlantActionType.Watering, DateTime.UtcNow);
+        var addEventRequest = new AddEventRequest(PlantActionType.Watering, DateTime.UtcNow);
 
         _ = Assert.CatchAsync<InvalidOperationException>(() =>
             this.client.PostAsJsonAsync($"/api/plants/{Guid.NewGuid()}/events", addEventRequest));

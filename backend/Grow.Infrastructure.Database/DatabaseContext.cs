@@ -53,7 +53,10 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbCont
             _ = entity.ToTable("Species");
             _ = entity.HasKey(p => p.Id);
             _ = entity.Property(p => p.Name).IsRequired().HasMaxLength(100);
-            _ = entity.Property(p => p.Intervals).IsRequired().HasConversion(x => JsonConvert.SerializeObject(x), x => JsonConvert.DeserializeObject<Dictionary<PlantActionType, TimeSpan>>(x)!);
+            _ = entity.Property(p => p.Intervals).IsRequired()
+                .HasConversion(
+                    x => JsonConvert.SerializeObject(x), 
+                    x => JsonConvert.DeserializeObject<Dictionary<PlantActionType, TimeSpan>>(x)!);
             _ = entity.Property(p => p.CreatedAt).IsRequired();
             _ = entity.Property(p => p.UpdatedAt).IsRequired();
         });
