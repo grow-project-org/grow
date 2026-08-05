@@ -6,27 +6,35 @@ namespace Grow.Infrastructure.Cqrs;
 
 public sealed class Dispatcher(IServiceProvider serviceProvider, ILogger<Dispatcher> logger) : IDispatcher
 {
-    public Task<TResult> QueryAsync<TQuery, TResult>(TQuery query, CancellationToken ct)
+    public async Task<TResult> QueryAsync<TQuery, TResult>(TQuery query, CancellationToken ct)
         where TQuery : IQuery<TResult>
     {
         ct.ThrowIfCancellationRequested();
+
+        var name = typeof(TQuery).Name;
+
         using var scope = serviceProvider.CreateScope();
         var handler = scope.ServiceProvider.GetRequiredService<IQueryHandler<TQuery, TResult>>();
 
-        logger.ExecutingQuery(typeof(TQuery).Name);
+        logger.ExecutingQueryStarted(name);
+        var result = await handler.HandleAsync(query, ct);
+        logger.ExecutingQueryFinished(name);
 
-        return handler.HandleAsync(query, ct);
+        return result;
     }
 
-    public Task SendAsync<TCommand>(TCommand command, CancellationToken ct)
+    public async Task SendAsync<TCommand>(TCommand command, CancellationToken ct)
         where TCommand : ICommand
     {
         ct.ThrowIfCancellationRequested();
+
+        var name = typeof(TCommand).Name;
+
         using var scope = serviceProvider.CreateScope();
         var handler = scope.ServiceProvider.GetRequiredService<ICommandHandler<TCommand>>();
 
-        logger.ExecutingCommand(typeof(TCommand).Name);
-
-        return handler.HandleAsync(command, ct);
+        logger.ExecutingCommandStarted(name);
+        await handler.HandleAsync(command, ct);
+        logger.ExecutingCommandFinished(name);
     }
 }
