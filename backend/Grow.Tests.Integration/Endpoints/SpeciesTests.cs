@@ -1,3 +1,4 @@
+using Grow.Domain.Commons;
 using Grow.WebApi.Dtos;
 using Grow.WebApi.Endpoints;
 using System.Net;
@@ -71,5 +72,78 @@ public class SpeciesTests : IntegrationTestBase
 
         Assert.That(specie, Is.Not.Null);
         Assert.That(specie!.Name, Is.EqualTo(name));
+    }
+
+    [Test]
+    public async Task UpdateInterval_WhenActionTypeIsWatering_ShouldReturnOkAndPersistInterval()
+    {
+        var specieId = await this.CreateSpecieAsync();
+        var interval = TimeSpan.FromDays(7);
+        var request = new UpdateIntervalRequest(interval);
+
+        var response = await this.client.PostAsJsonAsync($"/api/species/{specieId}/interval/{PlantActionType.Watering}", request);
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+
+        await using var db = await this.factory.CreateDbContextAsync();
+        var specie = await db.Species.FindAsync(specieId);
+
+        Assert.That(specie, Is.Not.Null);
+        Assert.That(specie!.Intervals[PlantActionType.Watering], Is.EqualTo(interval));
+    }
+
+    [Test]
+    public async Task UpdateInterval_WhenActionTypeIsFertilizing_ShouldReturnOkAndPersistInterval()
+    {
+        var specieId = await this.CreateSpecieAsync();
+        var interval = TimeSpan.FromDays(30);
+        var request = new UpdateIntervalRequest(interval);
+
+        var response = await this.client.PostAsJsonAsync($"/api/species/{specieId}/interval/{PlantActionType.Fertilizing}", request);
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+
+        await using var db = await this.factory.CreateDbContextAsync();
+        var specie = await db.Species.FindAsync(specieId);
+
+        Assert.That(specie, Is.Not.Null);
+        Assert.That(specie!.Intervals[PlantActionType.Fertilizing], Is.EqualTo(interval));
+    }
+
+    [Test]
+    public async Task UpdateInterval_CalledTwice_ShouldOverwritePreviousInterval()
+    {
+        var specieId = await this.CreateSpecieAsync();
+        _ = await this.client.PostAsJsonAsync($"/api/species/{specieId}/interval/{PlantActionType.Watering}", new UpdateIntervalRequest(TimeSpan.FromDays(7)));
+
+        var response = await this.client.PostAsJsonAsync($"/api/species/{specieId}/interval/{PlantActionType.Watering}", new UpdateIntervalRequest(TimeSpan.FromDays(3)));
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+
+        await using var db = await this.factory.CreateDbContextAsync();
+        var specie = await db.Species.FindAsync(specieId);
+
+        Assert.That(specie, Is.Not.Null);
+        Assert.That(specie!.Intervals[PlantActionType.Watering], Is.EqualTo(TimeSpan.FromDays(3)));
+    }
+
+    [Test]
+    public void UpdateInterval_WhenSpecieDoesNotExist_ShouldThrowArgumentException()
+    {
+        var request = new UpdateIntervalRequest(TimeSpan.FromDays(7));
+
+        _ = Assert.CatchAsync<ArgumentException>(() =>
+            this.client.PostAsJsonAsync($"/api/species/{Guid.NewGuid()}/interval/{PlantActionType.Watering}", request));
+    }
+
+    [Test]
+    public async Task UpdateInterval_WhenActionTypeIsInvalid_ShouldReturnNotFound()
+    {
+        var specieId = await this.CreateSpecieAsync();
+        var request = new UpdateIntervalRequest(TimeSpan.FromDays(7));
+
+        var response = await this.client.PostAsJsonAsync($"/api/species/{specieId}/interval/NotAnActionType", request);
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
     }
 }
