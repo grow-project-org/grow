@@ -8,9 +8,9 @@ public class CreateSpecieCommandHandler(IDatabaseContext databaseContext) : ICom
 {
     public async Task HandleAsync(CreateSpecieCommand command, CancellationToken ct)
     {
-        var specie = Specie.Create(command.Id, command.Name);
+        var specie = Specie.Create(command.Id, command.Name, Guid.NewGuid());
 
-        await databaseContext.Species.AddAsync(specie, ct);
-        await databaseContext.SaveChangesAsync(ct);
+        _ = await databaseContext.Species.AddAsync(specie, ct);
+        _ = await databaseContext.SaveChangesAsync(ct);
     }
 }

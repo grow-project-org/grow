@@ -9,7 +9,7 @@ public static partial class LoggerExtensions
     [LoggerMessage(EventId = (int)LoggerEvent.ExecutingQueryFinished, EventName = nameof(LoggerEvent.ExecutingQueryFinished), Level = LogLevel.Information, Message = "Executing query finished {queryName}", SkipEnabledCheck = false)]
     public static partial void ExecutingQueryFinished(this ILogger logger, string queryName);
 
-    
+
     [LoggerMessage(EventId = (int)LoggerEvent.ExecutingCommandStarted, EventName = nameof(LoggerEvent.ExecutingCommandStarted), Level = LogLevel.Information, Message = "Executing command started {commandName}", SkipEnabledCheck = false)]
     public static partial void ExecutingCommandStarted(this ILogger logger, string commandName);
 

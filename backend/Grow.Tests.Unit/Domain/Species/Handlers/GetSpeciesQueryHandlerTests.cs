@@ -30,8 +30,8 @@ public class GetSpeciesQueryHandlerTests
     [Test]
     public async Task HandleAsync_WhenSpeciesExist_ReturnsAllSpecies()
     {
-        var monstera = Specie.Create(Guid.NewGuid(), "Monstera Deliciosa");
-        var fern = Specie.Create(Guid.NewGuid(), "Boston Fern");
+        var monstera = Specie.Create(Guid.NewGuid(), "Monstera Deliciosa", Guid.NewGuid());
+        var fern = Specie.Create(Guid.NewGuid(), "Boston Fern", Guid.NewGuid());
         var ctxMock = CreateContextMock(monstera, fern);
         var handler = new GetSpeciesQueryHandler(ctxMock.Object);
 

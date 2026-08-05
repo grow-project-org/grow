@@ -6,14 +6,14 @@ namespace Grow.Tests.Unit.Domain.Species;
 [TestFixture]
 public class SpecieTests
 {
-    private static Specie CreateSampleSpecie() => Specie.Create(Guid.NewGuid(), "Monstera Deliciosa");
+    private static Specie CreateSampleSpecie() => Specie.Create(Guid.NewGuid(), "Monstera Deliciosa", Guid.NewGuid());
 
     [Test]
     public void Create_ShouldSetIdAndName()
     {
         var id = Guid.NewGuid();
 
-        var specie = Specie.Create(id, "Monstera Deliciosa");
+        var specie = Specie.Create(id, "Monstera Deliciosa", Guid.NewGuid());
 
         using (Assert.EnterMultipleScope())
         {

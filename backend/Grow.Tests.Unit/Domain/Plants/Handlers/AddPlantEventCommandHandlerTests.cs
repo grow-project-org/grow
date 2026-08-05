@@ -22,7 +22,7 @@ public class AddPlantEventCommandHandlerTests
     [Test]
     public async Task HandleAsync_WhenPlantExists_AddsEventAndCallsSaveChanges()
     {
-        var plant = Plant.Create(Guid.NewGuid(), "monstera-01", Guid.NewGuid());
+        var plant = Plant.Create(Guid.NewGuid(), "monstera-01", Guid.NewGuid(), Guid.NewGuid());
         var ctxMock = CreateContextMock(plant);
         var handler = new AddPlantEventCommandHandler(ctxMock.Object);
         var command = new AddPlantEventCommand(plant.Id, Guid.NewGuid(), PlantActionType.Watering, DateTime.UtcNow);

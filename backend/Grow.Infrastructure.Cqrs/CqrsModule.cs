@@ -4,7 +4,7 @@ namespace Grow.Infrastructure.Cqrs;
 
 public static class CqrsModule
 {
-    public static void RegisterCqrs(this IServiceCollection services)
+    public static IServiceCollection RegisterCqrs(this IServiceCollection services)
     {
         _ = services.AddSingleton<IDispatcher, Dispatcher>();
 
@@ -17,5 +17,7 @@ public static class CqrsModule
                 .AsImplementedInterfaces()
                 .WithScopedLifetime()
         );
+
+        return services;
     }
 }

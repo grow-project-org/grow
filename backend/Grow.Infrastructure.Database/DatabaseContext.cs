@@ -33,6 +33,11 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbCont
                 .HasForeignKey(p => p.SpecieId)
                 .IsRequired();
 
+            _ = entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(p => p.OwnerId)
+                .IsRequired();
+
             _ = entity.HasMany(p => p.Events)
                 .WithOne()
                 .HasForeignKey(x => x.PlantId)
@@ -75,10 +80,15 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbCont
             _ = entity.Property(p => p.Name).IsRequired().HasMaxLength(100);
             _ = entity.Property(p => p.Intervals).IsRequired()
                 .HasConversion(
-                    x => JsonConvert.SerializeObject(x), 
+                    x => JsonConvert.SerializeObject(x),
                     x => JsonConvert.DeserializeObject<Dictionary<PlantActionType, TimeSpan>>(x)!);
             _ = entity.Property(p => p.CreatedAt).IsRequired();
             _ = entity.Property(p => p.UpdatedAt).IsRequired();
+
+            _ = entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(p => p.OwnerId)
+                .IsRequired();
         });
 
         _ = builder.Entity<User>(entity =>
@@ -99,6 +109,11 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbCont
             _ = entity.Property(p => p.Type).IsRequired();
             _ = entity.Property(p => p.CreatedAt).IsRequired();
             _ = entity.Property(p => p.UpdatedAt).IsRequired();
+
+            _ = entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(p => p.OwnerId)
+                .IsRequired();
 
             _ = entity.HasMany(pg => pg.PlantGroupMemberships)
                 .WithOne()

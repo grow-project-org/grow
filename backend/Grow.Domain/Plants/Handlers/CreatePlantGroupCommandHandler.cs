@@ -23,17 +23,20 @@ public class CreatePlantGroupCommandHandler(IDatabaseContext context) : ICommand
             GroupType.Region =>
                 PlantGroup.CreateRegion(
                     command.id,
-                    command.Name),
+                    command.Name,
+                    Guid.NewGuid()),
 
             GroupType.TemporaryGroup =>
                 PlantGroup.CreateTemporaryGroup(
                     command.id,
-                    command.Name),
+                    command.Name,
+                    Guid.NewGuid()),
 
             GroupType.WorkGroup =>
                 PlantGroup.CreateWorkGroup(
                     command.id,
-                    command.Name),
+                    command.Name,
+                    Guid.NewGuid()),
 
             _ => throw new ArgumentOutOfRangeException(
                 nameof(command.type),

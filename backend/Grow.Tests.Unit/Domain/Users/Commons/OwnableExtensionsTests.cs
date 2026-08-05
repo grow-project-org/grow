@@ -1,4 +1,4 @@
-using Grow.Domain.Users.Commons;
+using Grow.Domain.Commons.Ownership;
 
 namespace Grow.Tests.Unit.Domain.Users.Commons;
 

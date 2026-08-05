@@ -5,14 +5,14 @@ namespace Grow.Tests.Unit.Domain.Plants;
 [TestFixture]
 public class PlantGroupTests
 {
-    private static Plant CreateSamplePlant() => Plant.Create(Guid.NewGuid(), "monstera-01", Guid.NewGuid());
+    private static Plant CreateSamplePlant() => Plant.Create(Guid.NewGuid(), "monstera-01", Guid.NewGuid(), Guid.NewGuid());
 
     [Test]
     public void CreateWorkGroup_ShouldSetNameAndType()
     {
         var id = Guid.NewGuid();
 
-        var group = PlantGroup.CreateWorkGroup(id, "Balcony");
+        var group = PlantGroup.CreateWorkGroup(id, "Balcony", Guid.NewGuid());
 
         using (Assert.EnterMultipleScope())
         {
@@ -25,16 +25,16 @@ public class PlantGroupTests
 
     [Test]
     public void CreateRegion_ShouldSetType()
-        => Assert.That(PlantGroup.CreateRegion(Guid.NewGuid(), "Kitchen").Type, Is.EqualTo(GroupType.Region));
+        => Assert.That(PlantGroup.CreateRegion(Guid.NewGuid(), "Kitchen", Guid.NewGuid()).Type, Is.EqualTo(GroupType.Region));
 
     [Test]
     public void CreateTemporaryGroup_ShouldSetType()
-        => Assert.That(PlantGroup.CreateTemporaryGroup(Guid.NewGuid(), "Quarantine").Type, Is.EqualTo(GroupType.TemporaryGroup));
+        => Assert.That(PlantGroup.CreateTemporaryGroup(Guid.NewGuid(), "Quarantine", Guid.NewGuid()).Type, Is.EqualTo(GroupType.TemporaryGroup));
 
     [Test]
     public void AddPlant_ShouldAddPlantToGroup()
     {
-        var group = PlantGroup.CreateWorkGroup(Guid.NewGuid(), "Balcony");
+        var group = PlantGroup.CreateWorkGroup(Guid.NewGuid(), "Balcony", Guid.NewGuid());
         var plant = CreateSamplePlant();
 
         group.AddPlant(plant.Id);
@@ -49,7 +49,7 @@ public class PlantGroupTests
     [Test]
     public void AddPlant_WhenPlantAlreadyInGroup_ShouldNotAddDuplicate()
     {
-        var group = PlantGroup.CreateWorkGroup(Guid.NewGuid(), "Balcony");
+        var group = PlantGroup.CreateWorkGroup(Guid.NewGuid(), "Balcony", Guid.NewGuid());
         var plant = CreateSamplePlant();
         group.AddPlant(plant.Id);
 
@@ -61,7 +61,7 @@ public class PlantGroupTests
     [Test]
     public void RemovePlant_ShouldRemovePlantFromGroup()
     {
-        var group = PlantGroup.CreateWorkGroup(Guid.NewGuid(), "Balcony");
+        var group = PlantGroup.CreateWorkGroup(Guid.NewGuid(), "Balcony", Guid.NewGuid());
         var plant = CreateSamplePlant();
         group.AddPlant(plant.Id);
 
@@ -73,7 +73,7 @@ public class PlantGroupTests
     [Test]
     public void RemovePlant_WhenPlantNotInGroup_ShouldNotThrow()
     {
-        var group = PlantGroup.CreateWorkGroup(Guid.NewGuid(), "Balcony");
+        var group = PlantGroup.CreateWorkGroup(Guid.NewGuid(), "Balcony", Guid.NewGuid());
 
         Assert.DoesNotThrow(() => group.RemovePlant(CreateSamplePlant().Id));
     }

@@ -3,7 +3,6 @@ using Grow.Domain.Plants;
 using Grow.Domain.Plants.Handlers;
 using MockQueryable.Moq;
 using Moq;
-using System.Numerics;
 using System.Reflection;
 
 namespace Grow.Tests.Unit.Domain.Plants.Handlers;
@@ -23,8 +22,8 @@ public class RemovePlantFromGroupCommandHandlerTests
     [Test]
     public async Task HandleAsync_WhenGroupAndPlantExists_RemovesPlantFromGroupAndSaveChanges()
     {
-        var plant = Plant.Create(Guid.NewGuid(), "monstera-02", Guid.NewGuid());
-        var group = PlantGroup.CreateWorkGroup(Guid.NewGuid(), "Balcony");
+        var plant = Plant.Create(Guid.NewGuid(), "monstera-02", Guid.NewGuid(), Guid.NewGuid());
+        var group = PlantGroup.CreateWorkGroup(Guid.NewGuid(), "Balcony", Guid.NewGuid());
         group.AddPlant(plant.Id);
 
         var ctxMock = CreateContextMock(plants: [plant], plantGroups: [group]);
@@ -44,7 +43,7 @@ public class RemovePlantFromGroupCommandHandlerTests
     [Test]
     public async Task HandleAsync_WhenPlantDoesNotExist_ThrowsExceptionAndDoesNotSave()
     {
-        var group = PlantGroup.CreateWorkGroup(Guid.NewGuid(), "Balcony");
+        var group = PlantGroup.CreateWorkGroup(Guid.NewGuid(), "Balcony", Guid.NewGuid());
         var ctxMock = CreateContextMock(plantGroups: [group]);
 
         var handler = new RemovePlantFromGroupCommandHandler(ctxMock.Object);
@@ -63,7 +62,7 @@ public class RemovePlantFromGroupCommandHandlerTests
     [Test]
     public async Task HandleAsync_WhenGroupDoesNotExist_ThrowsExceptionAndDoesNotSave()
     {
-        var plant = Plant.Create(Guid.NewGuid(), "monstera-02", Guid.NewGuid());
+        var plant = Plant.Create(Guid.NewGuid(), "monstera-02", Guid.NewGuid(), Guid.NewGuid());
         var ctxMock = CreateContextMock(plants: [plant]);
 
         var handler = new RemovePlantFromGroupCommandHandler(ctxMock.Object);

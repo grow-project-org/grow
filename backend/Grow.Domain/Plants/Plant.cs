@@ -1,9 +1,10 @@
 ﻿using Grow.Domain.Commons;
+using Grow.Domain.Commons.Ownership;
 using System.Collections.ObjectModel;
 
 namespace Grow.Domain.Plants;
 
-public class Plant
+public class Plant : IOwnable
 {
     private readonly Collection<PlantEvent> events = [];
 
@@ -21,14 +22,17 @@ public class Plant
     private readonly Collection<PlantGroupMembership> plantGroupMemberships = [];
     public IReadOnlyCollection<PlantGroupMembership> PlantGroupMemberships => this.plantGroupMemberships;
 
-    private Plant(Guid id, string customId, Guid specieId)
+    public Guid OwnerId { get; private set; }
+
+    private Plant(Guid id, string customId, Guid specieId, Guid ownerId)
     {
         this.Id = id;
         this.CustomId = customId;
         this.SpecieId = specieId;
+        this.OwnerId = ownerId;
     }
 
-    public static Plant Create(Guid id, string customId, Guid specieId) => new(id, customId, specieId);
+    public static Plant Create(Guid id, string customId, Guid specieId, Guid ownerId) => new(id, customId, specieId, ownerId);
 
     public void SetCustomId(string customId)
     {
