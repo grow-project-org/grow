@@ -21,4 +21,8 @@
     <ProjectReference Include="..\Grow.Domain\Grow.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Entities\" />
+  </ItemGroup>
+
 </Project>

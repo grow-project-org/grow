@@ -10,8 +10,8 @@ public class PlantGroup
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; private set; } = DateTime.UtcNow;
 
-    private readonly Collection<Plant> _plants = [];
-    public IReadOnlyCollection<Plant> Plants => this._plants;
+    private readonly Collection<PlantGroupMembership> plantGroupMemberships = [];
+    public IReadOnlyCollection<PlantGroupMembership> PlantGroupMemberships => this.plantGroupMemberships;
 
     private PlantGroup(Guid id, string name, GroupType type)
     {
@@ -24,20 +24,28 @@ public class PlantGroup
     public static PlantGroup CreateRegion(Guid id, string name) => new(id, name, GroupType.Region);
     public static PlantGroup CreateTemporaryGroup(Guid id, string name) => new(id, name, GroupType.TemporaryGroup);
 
-    public void AddPlant(Plant plant)
+    public void AddPlant(Guid plantId)
     {
-        if (!this._plants.Contains(plant))
+        var membership = this.plantGroupMemberships.FirstOrDefault(x => x.PlantId == plantId);
+        if (membership != null)
         {
-            this._plants.Add(plant);
-            this.UpdatedAt = DateTime.UtcNow;
+            return;
         }
+
+        var newMembership = PlantGroupMembership.Create(plantId, this.Id);
+        this.plantGroupMemberships.Add(newMembership);
+        this.UpdatedAt = DateTime.UtcNow;
     }
 
-    public void RemovePlant(Plant plant)
+    public void RemovePlant(Guid plantId)
     {
-        if (this._plants.Remove(plant))
+        var membership = this.plantGroupMemberships.FirstOrDefault(x => x.PlantId == plantId);
+        if (membership == null)
         {
-            this.UpdatedAt = DateTime.UtcNow;
+            return;
         }
+
+        this.plantGroupMemberships.Remove(membership);
+        this.UpdatedAt = DateTime.UtcNow;
     }
 }

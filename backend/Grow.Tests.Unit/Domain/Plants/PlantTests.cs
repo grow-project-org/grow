@@ -22,7 +22,7 @@ public class PlantTests
             Assert.That(plant.CustomId, Is.EqualTo("monstera-01"));
             Assert.That(plant.SpecieId, Is.EqualTo(specieId));
             Assert.That(plant.Events, Is.Empty);
-            Assert.That(plant.PlantGroups, Is.Empty);
+            Assert.That(plant.PlantGroupMemberships, Is.Empty);
         }
     }
 
