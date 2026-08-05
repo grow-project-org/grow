@@ -2,6 +2,8 @@
 
 public enum LoggerEvent
 {
-    ExecutingQuery = 1,
-    ExecutingCommand = 2,
+    ExecutingQueryStarted = 1,
+    ExecutingQueryFinished = 2,
+    ExecutingCommandStarted = 3,
+    ExecutingCommandFinished = 4,
 }
