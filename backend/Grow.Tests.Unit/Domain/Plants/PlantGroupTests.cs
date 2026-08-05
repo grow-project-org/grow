@@ -19,7 +19,7 @@ public class PlantGroupTests
             Assert.That(group.Id, Is.EqualTo(id));
             Assert.That(group.Name, Is.EqualTo("Balcony"));
             Assert.That(group.Type, Is.EqualTo(GroupType.WorkGroup));
-            Assert.That(group.PlantIds, Is.Empty);
+            Assert.That(group.PlantGroupMemberships, Is.Empty);
         }
     }
 
@@ -41,8 +41,8 @@ public class PlantGroupTests
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(group.PlantIds, Has.Count.EqualTo(1));
-            Assert.That(group.PlantIds, Does.Contain(plant.Id));
+            Assert.That(group.PlantGroupMemberships, Has.Count.EqualTo(1));
+            Assert.That(group.PlantGroupMemberships, Does.Contain(plant.Id));
         }
     }
 

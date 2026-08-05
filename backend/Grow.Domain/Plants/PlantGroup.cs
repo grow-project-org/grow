@@ -10,8 +10,8 @@ public class PlantGroup
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; private set; } = DateTime.UtcNow;
 
-    private readonly Collection<Guid> _plantIds = [];
-    public IReadOnlyCollection<Guid> PlantIds => this._plantIds;
+    private readonly Collection<PlantGroupMembership> plantGroupMemberships = [];
+    public IReadOnlyCollection<PlantGroupMembership> PlantGroupMemberships => this.plantGroupMemberships;
 
     private PlantGroup(Guid id, string name, GroupType type)
     {
@@ -26,23 +26,26 @@ public class PlantGroup
 
     public void AddPlant(Guid plantId)
     {
-        if (this._plantIds.Contains(plantId))
+        var membership = this.plantGroupMemberships.FirstOrDefault(x => x.PlantId == plantId);
+        if (membership != null)
         {
-            return;    
+            return;
         }
 
-        this._plantIds.Add(plantId);
+        var newMembership = PlantGroupMembership.Create(plantId, this.Id);
+        this.plantGroupMemberships.Add(newMembership);
         this.UpdatedAt = DateTime.UtcNow;
     }
 
     public void RemovePlant(Guid plantId)
     {
-        if (!this._plantIds.Contains(plantId))
+        var membership = this.plantGroupMemberships.FirstOrDefault(x => x.PlantId == plantId);
+        if (membership == null)
         {
             return;
         }
 
-        this._plantIds.Remove(plantId);
+        this.plantGroupMemberships.Remove(membership);
         this.UpdatedAt = DateTime.UtcNow;
     }
 }

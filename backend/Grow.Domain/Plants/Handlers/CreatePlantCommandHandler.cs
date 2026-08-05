@@ -9,7 +9,7 @@ public class CreatePlantCommandHandler(IDatabaseContext context) : ICommandHandl
 {
     public async Task HandleAsync(CreatePlantCommand command, CancellationToken ct)
     {
-        var specieExists = await context.Species.AnyAsync(x => x.Id == command.SpecieId);
+        var specieExists = await context.Species.AnyAsync(x => x.Id == command.SpecieId, ct);
         if (!specieExists)
         {
             throw new ArgumentException($"SpecieId '{command.SpecieId}' not exists.", nameof(command.SpecieId));
