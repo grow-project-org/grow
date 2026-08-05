@@ -1,4 +1,6 @@
-﻿namespace Grow.Domain.Users;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Grow.Domain.Users;
 
 public class User
 {
@@ -33,7 +35,7 @@ public class User
             throw new ArgumentException("Email cannot be empty or whitespace.", nameof(email));
         }
 
-        if (!email.Contains('@'))
+        if (!new EmailAddressAttribute().IsValid(email))
         {
             throw new ArgumentException("Invalid email format", nameof(email));
         }
