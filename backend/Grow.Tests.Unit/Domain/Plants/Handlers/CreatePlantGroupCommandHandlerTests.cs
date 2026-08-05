@@ -60,7 +60,7 @@ public class CreatePlantGroupCommandHandlerTests
     [Test]
     public async Task HandleAsync_WhenGroupNameAlreadyExists_ThrowsExceptionAndDoesNotSave()
     {
-        var existingGroup = PlantGroup.CreateWorkGroup(Guid.NewGuid(), "Balcony");
+        var existingGroup = PlantGroup.CreateWorkGroup(Guid.NewGuid(), "Balcony", Guid.NewGuid());
 
         var ctxMock = CreateContextMock(plantGroups: [existingGroup]);
 

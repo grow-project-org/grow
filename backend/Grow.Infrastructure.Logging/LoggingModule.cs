@@ -5,7 +5,7 @@ namespace Grow.Infrastructure.Logging;
 
 public static class LoggingModule
 {
-    public static void RegisterLogging(this IServiceCollection services)
+    public static IServiceCollection RegisterLogging(this IServiceCollection services)
     {
         var logger = new LoggerConfiguration()
             .WriteTo.Console()
@@ -13,6 +13,6 @@ public static class LoggingModule
 
         Log.Logger = logger;
 
-        _ = services.AddSerilog(logger);
+        return services.AddSerilog(logger);
     }
 }

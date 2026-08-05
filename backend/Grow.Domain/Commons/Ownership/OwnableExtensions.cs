@@ -1,4 +1,4 @@
-﻿namespace Grow.Domain.Users.Commons;
+﻿namespace Grow.Domain.Commons.Ownership;
 
 public static class OwnableExtensions
 {

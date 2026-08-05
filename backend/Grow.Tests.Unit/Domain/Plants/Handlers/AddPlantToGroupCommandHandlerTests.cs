@@ -22,8 +22,8 @@ public class AddPlantToGroupCommandHandlerTests
     [Test]
     public async Task HandleAsync_WhenGroupAndPlantExist_AddsPlantToGroupAndSaveChanges()
     {
-        var plant = Plant.Create(Guid.NewGuid(), "monstera-02", Guid.NewGuid());
-        var group = PlantGroup.CreateWorkGroup(Guid.NewGuid(), "Balcony");
+        var plant = Plant.Create(Guid.NewGuid(), "monstera-02", Guid.NewGuid(), Guid.NewGuid());
+        var group = PlantGroup.CreateWorkGroup(Guid.NewGuid(), "Balcony", Guid.NewGuid());
 
         var ctxMock = CreateContextMock(plants: [plant], plantGroups: [group]);
 
@@ -42,7 +42,7 @@ public class AddPlantToGroupCommandHandlerTests
     [Test]
     public async Task HandleAsync_WhenPlantDoesNotExist_ThrowsExceptionAndDoesNotSave()
     {
-        var group = PlantGroup.CreateWorkGroup(Guid.NewGuid(), "Balcony");
+        var group = PlantGroup.CreateWorkGroup(Guid.NewGuid(), "Balcony", Guid.NewGuid());
         var ctxMock = CreateContextMock(plantGroups: [group]);
 
         var handler = new AddPlantToGroupCommandHandler(ctxMock.Object);
@@ -50,7 +50,7 @@ public class AddPlantToGroupCommandHandlerTests
 
         var thrown = Assert.CatchAsync(() => handler.HandleAsync(command, CancellationToken.None))!;
         var actual = thrown is TargetInvocationException { InnerException: { } inner } ? inner : thrown;
-            
+
         using (Assert.EnterMultipleScope())
         {
             Assert.That(actual, Is.InstanceOf<InvalidOperationException>());
@@ -61,7 +61,7 @@ public class AddPlantToGroupCommandHandlerTests
     [Test]
     public async Task HandleAsync_WhenGroupDoesNotExist_ThrowsExceptionAndDoesNotSave()
     {
-        var plant = Plant.Create(Guid.NewGuid(), "monstera-02", Guid.NewGuid());
+        var plant = Plant.Create(Guid.NewGuid(), "monstera-02", Guid.NewGuid(), Guid.NewGuid());
         var ctxMock = CreateContextMock(plants: [plant]);
 
         var handler = new AddPlantToGroupCommandHandler(ctxMock.Object);

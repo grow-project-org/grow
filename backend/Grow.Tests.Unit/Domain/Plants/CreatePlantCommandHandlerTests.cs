@@ -36,8 +36,8 @@ public class CreatePlantCommandHandlerTests
     [Test]
     public void HandleAsync_WhenCustomIdAlreadyExists_ThrowsArgumentExceptionAndDoesNotSave()
     {
-        var specie = Specie.Create(Guid.NewGuid(), "Monstera Deliciosa");
-        var (ctxMock, _) = CreateContextMock([specie], Plant.Create(Guid.NewGuid(), "plant-01", specie.Id));
+        var specie = Specie.Create(Guid.NewGuid(), "Monstera Deliciosa", Guid.NewGuid());
+        var (ctxMock, _) = CreateContextMock([specie], Plant.Create(Guid.NewGuid(), "plant-01", specie.Id, Guid.NewGuid()));
         var handler = new CreatePlantCommandHandler(ctxMock.Object);
         var command = new CreatePlantCommand(Guid.NewGuid(), "plant-01", specie.Id);
 
@@ -49,7 +49,7 @@ public class CreatePlantCommandHandlerTests
     [Test]
     public async Task HandleAsync_WhenSpecieExistsAndCustomIdIsUnique_AddsPlantAndCallsSaveChanges()
     {
-        var specie = Specie.Create(Guid.NewGuid(), "Monstera Deliciosa");
+        var specie = Specie.Create(Guid.NewGuid(), "Monstera Deliciosa", Guid.NewGuid());
         var (ctxMock, plantsDbSet) = CreateContextMock([specie]);
         var handler = new CreatePlantCommandHandler(ctxMock.Object);
         var command = new CreatePlantCommand(Guid.NewGuid(), "plant-01", specie.Id);

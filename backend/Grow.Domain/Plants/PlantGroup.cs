@@ -1,8 +1,9 @@
-﻿using System.Collections.ObjectModel;
+﻿using Grow.Domain.Commons.Ownership;
+using System.Collections.ObjectModel;
 
 namespace Grow.Domain.Plants;
 
-public class PlantGroup
+public class PlantGroup : IOwnable
 {
     public Guid Id { get; private set; }
     public string Name { get; private set; }
@@ -13,16 +14,19 @@ public class PlantGroup
     private readonly Collection<PlantGroupMembership> plantGroupMemberships = [];
     public IReadOnlyCollection<PlantGroupMembership> PlantGroupMemberships => this.plantGroupMemberships;
 
-    private PlantGroup(Guid id, string name, GroupType type)
+    public Guid OwnerId { get; }
+
+    private PlantGroup(Guid id, string name, GroupType type, Guid ownerId)
     {
         this.Id = id;
         this.Name = name;
         this.Type = type;
+        this.OwnerId = ownerId;
     }
 
-    public static PlantGroup CreateWorkGroup(Guid id, string name) => new(id, name, GroupType.WorkGroup);
-    public static PlantGroup CreateRegion(Guid id, string name) => new(id, name, GroupType.Region);
-    public static PlantGroup CreateTemporaryGroup(Guid id, string name) => new(id, name, GroupType.TemporaryGroup);
+    public static PlantGroup CreateWorkGroup(Guid id, string name, Guid ownerId) => new(id, name, GroupType.WorkGroup, ownerId);
+    public static PlantGroup CreateRegion(Guid id, string name, Guid ownerId) => new(id, name, GroupType.Region, ownerId);
+    public static PlantGroup CreateTemporaryGroup(Guid id, string name, Guid ownerId) => new(id, name, GroupType.TemporaryGroup, ownerId);
 
     public void AddPlant(Guid plantId)
     {
@@ -45,7 +49,7 @@ public class PlantGroup
             return;
         }
 
-        this.plantGroupMemberships.Remove(membership);
+        _ = this.plantGroupMemberships.Remove(membership);
         this.UpdatedAt = DateTime.UtcNow;
     }
 }

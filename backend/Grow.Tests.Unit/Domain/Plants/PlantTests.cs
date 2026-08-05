@@ -6,7 +6,7 @@ namespace Grow.Tests.Unit.Domain.Plants;
 [TestFixture]
 public class PlantTests
 {
-    private static Plant CreateSamplePlant() => Plant.Create(Guid.NewGuid(), "monstera-01", Guid.NewGuid());
+    private static Plant CreateSamplePlant() => Plant.Create(Guid.NewGuid(), "monstera-01", Guid.NewGuid(), Guid.NewGuid());
 
     [Test]
     public void Create_ShouldSetProvidedValues()
@@ -14,7 +14,7 @@ public class PlantTests
         var id = Guid.NewGuid();
         var specieId = Guid.NewGuid();
 
-        var plant = Plant.Create(id, "monstera-01", specieId);
+        var plant = Plant.Create(id, "monstera-01", specieId, Guid.NewGuid());
 
         using (Assert.EnterMultipleScope())
         {
