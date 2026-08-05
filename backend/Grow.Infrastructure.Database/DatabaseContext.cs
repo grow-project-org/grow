@@ -4,6 +4,7 @@ using Grow.Domain.Plants;
 using Grow.Domain.Species;
 using Grow.Domain.Users;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Newtonsoft.Json;
 
 namespace Grow.Infrastructure.Database;
@@ -78,10 +79,14 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbCont
             _ = entity.ToTable("Species");
             _ = entity.HasKey(p => p.Id);
             _ = entity.Property(p => p.Name).IsRequired().HasMaxLength(100);
-            _ = entity.Property(p => p.Intervals).IsRequired()
+            var intervalsProperty = entity.Property(p => p.Intervals).IsRequired()
                 .HasConversion(
                     x => JsonConvert.SerializeObject(x),
                     x => JsonConvert.DeserializeObject<Dictionary<PlantActionType, TimeSpan>>(x)!);
+            intervalsProperty.Metadata.SetValueComparer(new ValueComparer<Dictionary<PlantActionType, TimeSpan>>(
+                (a, b) => (a ?? new()).SequenceEqual(b ?? new()),
+                d => d.Aggregate(0, (hash, kv) => HashCode.Combine(hash, kv.Key, kv.Value)),
+                d => new Dictionary<PlantActionType, TimeSpan>(d)));
             _ = entity.Property(p => p.CreatedAt).IsRequired();
             _ = entity.Property(p => p.UpdatedAt).IsRequired();
 
