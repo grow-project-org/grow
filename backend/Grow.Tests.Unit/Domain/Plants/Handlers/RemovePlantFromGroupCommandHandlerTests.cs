@@ -36,7 +36,7 @@ public class RemovePlantFromGroupCommandHandlerTests
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(group.PlantIds, Is.Empty);
+            Assert.That(group.PlantGroupMemberships, Is.Empty);
             ctxMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
     }

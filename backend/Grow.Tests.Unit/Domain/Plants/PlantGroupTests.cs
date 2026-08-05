@@ -42,7 +42,7 @@ public class PlantGroupTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(group.PlantGroupMemberships, Has.Count.EqualTo(1));
-            Assert.That(group.PlantGroupMemberships, Does.Contain(plant.Id));
+            Assert.That(group.PlantGroupMemberships.Select(x => x.PlantId), Does.Contain(plant.Id));
         }
     }
 
@@ -55,7 +55,7 @@ public class PlantGroupTests
 
         group.AddPlant(plant.Id);
 
-        Assert.That(group.PlantIds, Has.Count.EqualTo(1));
+        Assert.That(group.PlantGroupMemberships, Has.Count.EqualTo(1));
     }
 
     [Test]
@@ -67,7 +67,7 @@ public class PlantGroupTests
 
         group.RemovePlant(plant.Id);
 
-        Assert.That(group.PlantIds, Is.Empty);
+        Assert.That(group.PlantGroupMemberships, Is.Empty);
     }
 
     [Test]

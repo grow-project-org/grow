@@ -34,7 +34,7 @@ public class AddPlantToGroupCommandHandlerTests
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(group.PlantIds, Does.Contain(plant.Id));
+            Assert.That(group.PlantGroupMemberships.Select(x => x.PlantId), Does.Contain(plant.Id));
             ctxMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
     }

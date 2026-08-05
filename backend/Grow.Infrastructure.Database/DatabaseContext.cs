@@ -42,6 +42,11 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbCont
                 .HasField("events")
                 .UsePropertyAccessMode(PropertyAccessMode.Field);
 
+            _ = entity.HasMany(p => p.PlantGroupMemberships)
+                .WithOne()
+                .HasForeignKey(m => m.PlantId)
+                .IsRequired();
+
             _ = entity.Navigation(p => p.PlantGroupMemberships)
                 .HasField("plantGroupMemberships")
                 .UsePropertyAccessMode(PropertyAccessMode.Field);
@@ -51,9 +56,6 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbCont
         {
             _ = entity.ToTable("PlantGroupMemberships");
             _ = entity.HasKey(m => new { m.PlantId, m.PlantGroupId });
-
-            _ = entity.HasOne<Plant>().WithMany().HasForeignKey(m => m.PlantId);
-            _ = entity.HasOne<PlantGroup>().WithMany().HasForeignKey(m => m.PlantGroupId);
         });
 
         _ = builder.Entity<PlantEvent>(entity =>
@@ -98,7 +100,12 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbCont
             _ = entity.Property(p => p.CreatedAt).IsRequired();
             _ = entity.Property(p => p.UpdatedAt).IsRequired();
 
-            _ = entity.Navigation(p => p.PlantGroupMemberships)
+            _ = entity.HasMany(pg => pg.PlantGroupMemberships)
+                .WithOne()
+                .HasForeignKey(m => m.PlantGroupId)
+                .IsRequired();
+
+            _ = entity.Navigation(pg => pg.PlantGroupMemberships)
                 .HasField("plantGroupMemberships")
                 .UsePropertyAccessMode(PropertyAccessMode.Field);
         });
