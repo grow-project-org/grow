@@ -1,3 +1,4 @@
+using Grow.Commons.Throttling;
 using Grow.Infrastructure.Cqrs;
 using Grow.Infrastructure.Database;
 using Grow.Infrastructure.Logging;
@@ -17,6 +18,8 @@ builder.Services
     .AddMemoryCache(options => options.ExpirationScanFrequency = TimeSpan.FromMinutes(5))
     .AddGrowDatabase(o => o.UseNpgsql(postgresConnectionString))
     .SetupHealthChecks();
+
+builder.Services.AddSingleton<UniversalThrottle>();
 
 var app = builder.Build();
 

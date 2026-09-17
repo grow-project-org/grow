@@ -14,6 +14,8 @@ public static class UsersEndpoints
         var group = app.MapGroup("/api/users").WithTags("Users");
 
         _ = group.MapPost("/register", Register);
+        _ = group.MapPost("/login", Register);
+        _ = group.MapPost("/me", Register);
 
         return app;
     }
