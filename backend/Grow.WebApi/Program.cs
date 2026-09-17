@@ -34,6 +34,7 @@ app.UseHttpsRedirection();
 
 app
     .MapPlantsEndpoints()
-    .MapSpeciesEndpoints();
+    .MapSpeciesEndpoints()
+    .MapUsersEndpoints();
 
 app.Run();
