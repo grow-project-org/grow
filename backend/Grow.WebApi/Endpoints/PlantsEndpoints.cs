@@ -12,12 +12,6 @@ public record CreatePlantResponse(Guid CreatedPlantId);
 public record AddEventRequest(PlantActionType Type, DateTime ExecutedAt);
 public record AddEventResponse(Guid PlantEventId);
 
-public record AddPlantToGroupRequest(Guid PlantGroupId, Guid PlantId);
-public record AddPlantToGroupResponse(Guid PlantGroupId, Guid PlantId);
-
-public record RemovePlantFromGroupRequest(Guid PlantGroupId, Guid PlantId);
-public record RemovePlantFromGroupResponse(Guid PlantGroupId, Guid PlantId);
-
 public record CreatePlantGroupRequest(string Name, GroupType Type);
 public record CreatePlantGroupResponse(Guid CreatedPlantGroupId);
 
@@ -53,22 +47,6 @@ public static class PlantsEndpoints
         return new(id);
     }
 
-    public static async Task<RemovePlantFromGroupResponse> RemoveFromGroup(IDispatcher dispatcher, [FromBody] RemovePlantFromGroupRequest request, CancellationToken ct)
-    {
-        await dispatcher.SendAsync(
-            new RemovePlantFromGroupCommand(request.PlantGroupId, request.PlantId), ct);
-        return new(
-            request.PlantGroupId, request.PlantId);
-    }
-
-    public static async Task<AddPlantToGroupResponse> AddToGroup(IDispatcher dispatcher, [FromBody] AddPlantToGroupRequest request, CancellationToken ct)
-    {
-        await dispatcher.SendAsync(
-            new AddPlantToGroupCommand(request.PlantGroupId, request.PlantId), ct);
-        return new(
-            request.PlantGroupId, request.PlantId);
-    }
-
     public static async Task<CreatePlantResponse> CreatePlant(IDispatcher dispatcher, [FromBody] CreatePlantRequest request, CancellationToken ct)
     {
         var id = Guid.CreateVersion7();
@@ -82,4 +60,10 @@ public static class PlantsEndpoints
         await dispatcher.SendAsync(new AddPlantEventCommand(plantId, id, request.Type, request.ExecutedAt), ct);
         return new(id);
     }
+
+    public static async Task AddToGroup(IDispatcher dispatcher, [FromRoute] Guid plantId, [FromRoute] Guid plantGroupId, CancellationToken ct)
+        => await dispatcher.SendAsync(new AddPlantToGroupCommand(plantGroupId, plantId), ct);
+
+    public static async Task RemoveFromGroup(IDispatcher dispatcher, [FromRoute] Guid plantId, [FromRoute] Guid plantGroupId, CancellationToken ct)
+        => await dispatcher.SendAsync(new RemovePlantFromGroupCommand(plantGroupId, plantId), ct);
 }

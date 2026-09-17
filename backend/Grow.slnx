@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/Infrastructure/">
+    <Project Path="Grow.Infrastructure.Auth/Grow.Infrastructure.Auth.csproj" Id="ef190cd6-7e3c-4926-8946-691bcd5aa0eb" />
     <Project Path="Grow.Infrastructure.Cqrs/Grow.Infrastructure.Cqrs.csproj" />
     <Project Path="Grow.Infrastructure.Database/Grow.Infrastructure.Database.csproj" />
     <Project Path="Grow.Infrastructure.Logging/Grow.Infrastructure.Logging.csproj" />
