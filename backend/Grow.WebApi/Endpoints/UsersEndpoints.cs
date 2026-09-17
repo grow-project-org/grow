@@ -26,10 +26,10 @@ public static class UsersEndpoints
         var group = app.MapGroup("/api/users").WithTags("Users");
 
         _ = group.MapPost("/register", Register);
-        _ = group.MapPost("/login", Register);
-        _ = group.MapPost("/me", Register);
+        _ = group.MapPost("/login", Login);
+        _ = group.MapPost("/me", GetMe);
 
-        group.MapGet("/csrf", (IAntiforgery forgery, HttpContext ctx) =>
+        _ = group.MapGet("/csrf", (IAntiforgery forgery, HttpContext ctx) =>
         {
             var tokens = forgery.GetAndStoreTokens(ctx);
             return tokens.RequestToken;
