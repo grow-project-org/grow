@@ -4,12 +4,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Grow.Domain.Plants.Handlers;
 
-public record GetPlantActionScheduleQuery(Guid PlantId, PlantActionType Type) : IQuery<GetPlantActionScheduleQueryResult>;
-public record GetPlantActionScheduleQueryResult(DateOnly? NextDate);
+public record GetPlantActionScheduleCommand(Guid PlantId, PlantActionType Type) : IQuery<GetPlantActionScheduleCommandResult>;
+public record GetPlantActionScheduleCommandResult(DateOnly? NextDate);
 
-public class GetPlantActionScheduleQueryHandler(IDatabaseContext databaseContext) : IQueryHandler<GetPlantActionScheduleQuery, GetPlantActionScheduleQueryResult>
+public class GetPlantActionScheduleCommandHandler(IDatabaseContext databaseContext) : IQueryHandler<GetPlantActionScheduleCommand, GetPlantActionScheduleCommandResult>
 {
-    public async Task<GetPlantActionScheduleQueryResult> HandleAsync(GetPlantActionScheduleQuery query, CancellationToken ct)
+    public async Task<GetPlantActionScheduleCommandResult> HandleAsync(GetPlantActionScheduleCommand query, CancellationToken ct)
     {
         var plant = await databaseContext.Plants.FirstAsync(x => x.Id == query.PlantId, ct);
         var specie = await databaseContext.Species.FirstAsync(x => x.Id == plant.SpecieId, ct);
@@ -21,16 +21,16 @@ public class GetPlantActionScheduleQueryHandler(IDatabaseContext databaseContext
 
         if (lastEvent is null)
         {
-            return new GetPlantActionScheduleQueryResult(null);
+            return new GetPlantActionScheduleCommandResult(null);
         }
 
         if (!specie.Intervals.TryGetValue(query.Type, out var interval))
         {
-            return new GetPlantActionScheduleQueryResult(null);
+            return new GetPlantActionScheduleCommandResult(null);
         }
 
         var nextDate = PlantActionSchedule.CalculateNextDate(lastEvent.ExecutedAt, interval);
 
-        return new GetPlantActionScheduleQueryResult(nextDate);
+        return new GetPlantActionScheduleCommandResult(nextDate);
     }
 }
