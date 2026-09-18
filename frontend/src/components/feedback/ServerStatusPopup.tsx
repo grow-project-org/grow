@@ -1,7 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { dismissNotice, getNotices, subscribeNotices } from '../../state/notifications';
 import { queryClient } from '../../app/queryClient';
-import { gardenKeys } from '../../api/queryKeys';
 import styles from './ServerStatusPopup.module.css';
 
 /** Connection-error popup driven by the notifications store. */
@@ -10,7 +9,9 @@ export const ServerStatusPopup = () => {
   if (!notices.length) return null;
 
   const latest = notices[notices.length - 1];
-  const retry = () => queryClient.refetchQueries({ queryKey: gardenKeys.all });
+  // Refetch every active query (auth probe + species catalogue) rather than
+  // one fixed key — there's no single "the garden" query anymore.
+  const retry = () => queryClient.refetchQueries();
 
   return (
     <div className={styles.wrap}>

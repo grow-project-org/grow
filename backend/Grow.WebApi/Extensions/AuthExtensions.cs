@@ -23,7 +23,7 @@ public static class AuthExtensions
             options.AddDefaultPolicy(policy =>
                 policy
                     .WithOrigins(allowedOrigins)
-                    .WithMethods("GET", "POST")
+                    .WithMethods("GET", "POST", "DELETE")
                     .WithHeaders("Content-Type", "X-CSRF-TOKEN")
                     .AllowCredentials()
                     .SetPreflightMaxAge(TimeSpan.FromMinutes(10)));
@@ -104,7 +104,7 @@ public static class AuthExtensions
         _ = services.AddCors(options => options.AddDefaultPolicy(policy =>
         policy
             .WithOrigins(["http://localhost:5173"])
-            .WithMethods("GET", "POST")
+            .WithMethods("GET", "POST", "DELETE")
             .WithHeaders("Content-Type", "X-CSRF-TOKEN")
             .AllowCredentials()
             .SetPreflightMaxAge(TimeSpan.FromMinutes(10))));

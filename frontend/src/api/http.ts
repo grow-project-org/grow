@@ -29,6 +29,10 @@ export const request = async <T>(path: string, init: RequestInitJson = {}): Prom
     const response = await fetch(`${API_BASE_URL}${path}`, {
       ...init,
       signal: controller.signal,
+      // The backend authenticates via a `__Host-Auth` session cookie — every
+      // request must carry it, or every command handler will reject with
+      // "UserSessionProvider is not initialized".
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json', ...init.headers },
       body: init.body === undefined ? undefined : JSON.stringify(init.body),
     });
