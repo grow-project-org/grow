@@ -1,16 +1,18 @@
-﻿using Grow.Infrastructure.Cqrs;
+﻿using Grow.Domain.Commons;
+using Grow.Infrastructure.Cqrs;
 using Microsoft.EntityFrameworkCore;
 
 namespace Grow.Domain.Plants.Handlers;
 
 public record CreatePlantGroupCommand(Guid id, string Name, GroupType type) : ICommand;
 
-public class CreatePlantGroupCommandHandler(IDatabaseContext context) : ICommandHandler<CreatePlantGroupCommand>
+public class CreatePlantGroupCommandHandler(IDatabaseContext context, IAuthUserSessionProvider userSessionProvider) : ICommandHandler<CreatePlantGroupCommand>
 {
     public async Task HandleAsync(CreatePlantGroupCommand command, CancellationToken ct)
     {
-        var nameAlreadyExists = await context.PlantGroups.AnyAsync(x => x.Name == command.Name, ct);
+        var user = userSessionProvider.Get();
 
+        var nameAlreadyExists = await context.PlantGroups.AnyAsync(x => x.OwnerId == user.Id && x.Name == command.Name, ct);
         if (nameAlreadyExists)
         {
             throw new ArgumentException(
@@ -24,19 +26,19 @@ public class CreatePlantGroupCommandHandler(IDatabaseContext context) : ICommand
                 PlantGroup.CreateRegion(
                     command.id,
                     command.Name,
-                    Guid.NewGuid()),
+                    user.Id),
 
             GroupType.TemporaryGroup =>
                 PlantGroup.CreateTemporaryGroup(
                     command.id,
                     command.Name,
-                    Guid.NewGuid()),
+                    user.Id),
 
             GroupType.WorkGroup =>
                 PlantGroup.CreateWorkGroup(
                     command.id,
                     command.Name,
-                    Guid.NewGuid()),
+                    user.Id),
 
             _ => throw new ArgumentOutOfRangeException(
                 nameof(command.type),

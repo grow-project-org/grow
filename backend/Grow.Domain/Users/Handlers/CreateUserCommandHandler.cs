@@ -1,4 +1,5 @@
-﻿using Grow.Infrastructure.Cqrs;
+﻿using Grow.Domain.Commons;
+using Grow.Infrastructure.Cqrs;
 
 namespace Grow.Domain.Users.Handlers;
 

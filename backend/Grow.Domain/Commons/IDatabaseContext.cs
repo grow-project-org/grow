@@ -3,7 +3,7 @@ using Grow.Domain.Species;
 using Grow.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 
-namespace Grow.Domain;
+namespace Grow.Domain.Commons;
 
 public interface IDatabaseContext
 {

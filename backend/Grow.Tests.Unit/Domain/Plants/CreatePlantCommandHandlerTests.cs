@@ -1,4 +1,4 @@
-using Grow.Domain;
+using Grow.Domain.Commons;
 using Grow.Domain.Plants;
 using Grow.Domain.Plants.Handlers;
 using Grow.Domain.Species;

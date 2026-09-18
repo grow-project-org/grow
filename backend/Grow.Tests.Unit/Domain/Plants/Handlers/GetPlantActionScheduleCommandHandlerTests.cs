@@ -2,7 +2,6 @@
 using MockQueryable.Moq;
 using Grow.Domain.Plants;
 using Grow.Domain.Species;
-using Grow.Domain;
 using Grow.Domain.Commons;
 using Grow.Domain.Plants.Handlers;
 
