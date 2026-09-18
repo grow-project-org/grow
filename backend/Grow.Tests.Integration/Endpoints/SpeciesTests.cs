@@ -1,4 +1,5 @@
 using Grow.Domain.Commons;
+using Grow.Domain.Commons.Ownership;
 using Grow.WebApi.Dtos;
 using Grow.WebApi.Endpoints;
 using System.Net;
@@ -72,6 +73,51 @@ public class SpeciesTests : IntegrationTestBase
 
         Assert.That(specie, Is.Not.Null);
         Assert.That(specie!.Name, Is.EqualTo(name));
+    }
+
+    [Test]
+    public async Task CreateSpecie_ShouldPersistSpecieOwnedByLoggedInUser()
+    {
+        var newSpecieRequest = new CreateSpecieRequest($"monstera-{Guid.NewGuid()}");
+
+        var response = await this.client.PostAsJsonAsync("/api/species", newSpecieRequest);
+        var result = await response.Content.ReadFromJsonAsync<CreateSpecieResponse>();
+
+        await using var db = await this.factory.CreateDbContextAsync();
+        var specie = await db.Species.FindAsync(result!.SpecieId);
+
+        Assert.That(specie, Is.Not.Null);
+        Assert.That(specie!.OwnerId, Is.EqualTo(this.currentUserId));
+    }
+
+    [Test]
+    public async Task GetSpecies_ShouldNotReturnAnotherUsersSpecies()
+    {
+        var (otherClient, _) = await this.CreateOtherUserClientAsync();
+        var otherUsersSpecieRequest = new CreateSpecieRequest($"secret-{Guid.NewGuid()}");
+        var otherUsersSpecieResponse = await otherClient.PostAsJsonAsync("/api/species", otherUsersSpecieRequest);
+        var otherUsersSpecie = await otherUsersSpecieResponse.Content.ReadFromJsonAsync<CreateSpecieResponse>();
+
+        var response = await this.client.GetAsync("/api/species");
+        var result = await response.Content.ReadFromJsonAsync<SpecieDto[]>();
+
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result!.Select(s => s.Id), Does.Not.Contain(otherUsersSpecie!.SpecieId));
+    }
+
+    [Test]
+    public void UpdateInterval_WhenSpecieBelongsToAnotherUser_ShouldThrowOwnershipException()
+    {
+        _ = Assert.CatchAsync<OwnershipException>(async () =>
+        {
+            var (otherClient, _) = await this.CreateOtherUserClientAsync();
+            var otherUsersSpecieRequest = new CreateSpecieRequest($"secret-{Guid.NewGuid()}");
+            var otherUsersSpecieResponse = await otherClient.PostAsJsonAsync("/api/species", otherUsersSpecieRequest);
+            var otherUsersSpecie = await otherUsersSpecieResponse.Content.ReadFromJsonAsync<CreateSpecieResponse>();
+
+            var request = new UpdateIntervalRequest(TimeSpan.FromDays(7));
+            _ = await this.client.PostAsJsonAsync($"/api/species/{otherUsersSpecie!.SpecieId}/interval/{PlantActionType.Watering}", request);
+        });
     }
 
     [Test]

@@ -1,6 +1,5 @@
 using Grow.WebApi.Endpoints;
 using Microsoft.AspNetCore.Identity.Data;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
 using System.Net.Http.Json;
@@ -10,9 +9,6 @@ namespace Grow.Tests.Integration.Endpoints;
 [TestFixture]
 public class UsersTests : IntegrationTestBase
 {
-    private HttpClient CreateHttpsClient()
-        => this.factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
-
     private async Task RegisterUserAsync(HttpClient httpClient, string email, string username = "test_username")
     {
         var request = new CreateUserRequest(email, username);

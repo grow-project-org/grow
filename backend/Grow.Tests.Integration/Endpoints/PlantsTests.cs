@@ -1,4 +1,5 @@
 using Grow.Domain.Commons;
+using Grow.Domain.Commons.Ownership;
 using Grow.WebApi.Endpoints;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
@@ -71,6 +72,32 @@ public class PlantsTests : IntegrationTestBase
     }
 
     [Test]
+    public async Task CreatePlant_ShouldPersistPlantOwnedByLoggedInUser()
+    {
+        var plantId = await this.CreatePlantAsync();
+
+        await using var db = await this.factory.CreateDbContextAsync();
+        var plant = await db.Plants.FindAsync(plantId);
+
+        Assert.That(plant, Is.Not.Null);
+        Assert.That(plant!.OwnerId, Is.EqualTo(this.currentUserId));
+    }
+
+    [Test]
+    public void CreatePlant_WhenSpecieBelongsToAnotherUser_ShouldThrowOwnershipException()
+    {
+        _ = Assert.CatchAsync<OwnershipException>(async () =>
+        {
+            var (otherClient, _) = await this.CreateOtherUserClientAsync();
+            var otherUsersSpecieResponse = await otherClient.PostAsJsonAsync("/api/species", new CreateSpecieRequest($"secret-{Guid.NewGuid()}"));
+            var otherUsersSpecie = await otherUsersSpecieResponse.Content.ReadFromJsonAsync<CreateSpecieResponse>();
+
+            var newPlantCommand = new CreatePlantRequest($"monstera-{Guid.NewGuid()}", otherUsersSpecie!.SpecieId);
+            _ = await this.client.PostAsJsonAsync("/api/plants", newPlantCommand);
+        });
+    }
+
+    [Test]
     public async Task AddEvent_ShouldReturnEventIdAndPersistEvent()
     {
         var plantId = await this.CreatePlantAsync();
@@ -109,5 +136,21 @@ public class PlantsTests : IntegrationTestBase
 
         _ = Assert.CatchAsync<InvalidOperationException>(() =>
             this.client.PostAsJsonAsync($"/api/plants/{Guid.NewGuid()}/events", addEventRequest));
+    }
+
+    [Test]
+    public void AddEvent_WhenPlantBelongsToAnotherUser_ShouldThrowOwnershipException()
+    {
+        _ = Assert.CatchAsync<OwnershipException>(async () =>
+        {
+            var (otherClient, _) = await this.CreateOtherUserClientAsync();
+            var otherUsersSpecieResponse = await otherClient.PostAsJsonAsync("/api/species", new CreateSpecieRequest($"secret-{Guid.NewGuid()}"));
+            var otherUsersSpecie = await otherUsersSpecieResponse.Content.ReadFromJsonAsync<CreateSpecieResponse>();
+            var otherUsersPlantResponse = await otherClient.PostAsJsonAsync("/api/plants", new CreatePlantRequest($"monstera-{Guid.NewGuid()}", otherUsersSpecie!.SpecieId));
+            var otherUsersPlant = await otherUsersPlantResponse.Content.ReadFromJsonAsync<CreatePlantResponse>();
+
+            var addEventRequest = new AddEventRequest(PlantActionType.Watering, DateTime.UtcNow);
+            _ = await this.client.PostAsJsonAsync($"/api/plants/{otherUsersPlant!.CreatedPlantId}/events", addEventRequest);
+        });
     }
 }
