@@ -1,4 +1,4 @@
-using Grow.Domain;
+using Grow.Domain.Commons;
 using Grow.Domain.Species;
 using Grow.Domain.Species.Handlers;
 using MockQueryable.Moq;
@@ -18,11 +18,20 @@ public class CreateSpecieCommandHandlerTests
         return (ctxMock, speciesDbSet);
     }
 
+    private static Mock<IAuthUserSessionProvider> CreateUserSessionProviderMock(Guid userId)
+    {
+        var userSessionProviderMock = new Mock<IAuthUserSessionProvider>();
+        _ = userSessionProviderMock.Setup(x => x.Get()).Returns(new AuthUser(userId, true));
+        return userSessionProviderMock;
+    }
+
     [Test]
     public async Task HandleAsync_AddsSpecieAndCallsSaveChanges()
     {
+        var ownerId = Guid.NewGuid();
         var (ctxMock, speciesDbSet) = CreateContextMock();
-        var handler = new CreateSpecieCommandHandler(ctxMock.Object);
+        var userSessionProviderMock = CreateUserSessionProviderMock(ownerId);
+        var handler = new CreateSpecieCommandHandler(ctxMock.Object, userSessionProviderMock.Object);
         var command = new CreateSpecieCommand(Guid.NewGuid(), "Monstera Deliciosa");
 
         await handler.HandleAsync(command, CancellationToken.None);
@@ -31,7 +40,7 @@ public class CreateSpecieCommandHandlerTests
         {
             speciesDbSet.Verify(
                 x => x.AddAsync(
-                    It.Is<Specie>(s => s.Id == command.Id && s.Name == command.Name),
+                    It.Is<Specie>(s => s.Id == command.Id && s.Name == command.Name && s.OwnerId == ownerId),
                     It.IsAny<CancellationToken>()),
                 Times.Once);
 

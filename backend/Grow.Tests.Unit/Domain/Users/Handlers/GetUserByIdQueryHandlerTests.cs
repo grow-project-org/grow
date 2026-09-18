@@ -1,4 +1,4 @@
-using Grow.Domain;
+using Grow.Domain.Commons;
 using Grow.Domain.Users.Handlers;
 using MockQueryable.Moq;
 using Moq;

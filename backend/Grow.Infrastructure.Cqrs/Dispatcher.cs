@@ -13,8 +13,7 @@ public sealed class Dispatcher(IServiceProvider serviceProvider, ILogger<Dispatc
 
         var name = typeof(TQuery).Name;
 
-        using var scope = serviceProvider.CreateScope();
-        var handler = scope.ServiceProvider.GetRequiredService<IQueryHandler<TQuery, TResult>>();
+        var handler = serviceProvider.GetRequiredService<IQueryHandler<TQuery, TResult>>();
 
         logger.ExecutingQueryStarted(name);
         var result = await handler.HandleAsync(query, ct);
@@ -30,8 +29,7 @@ public sealed class Dispatcher(IServiceProvider serviceProvider, ILogger<Dispatc
 
         var name = typeof(TCommand).Name;
 
-        using var scope = serviceProvider.CreateScope();
-        var handler = scope.ServiceProvider.GetRequiredService<ICommandHandler<TCommand>>();
+        var handler = serviceProvider.GetRequiredService<ICommandHandler<TCommand>>();
 
         logger.ExecutingCommandStarted(name);
         await handler.HandleAsync(command, ct);

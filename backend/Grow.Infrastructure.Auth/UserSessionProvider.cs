@@ -4,16 +4,30 @@ namespace Grow.Infrastructure.Auth;
 
 public class UserSessionProvider(SessionStorage sessionStorage)
 {
-    public string? SessionKey { get; set; }
+    private bool initialized;
+    public string? SessionKey { get; private set; }
+    public HttpContext? Context { get; private set; }
 
-    public UserSession GetSession(HttpContext context)
+    public void Initialize(string sessionKey, HttpContext httpContext)
     {
-        if (this.SessionKey == null)
+        if (this.initialized)
         {
-            throw new ArgumentException("Session key is not set");
+            throw new Exception("UserSessionProvider is already initialized");
         }
 
-        var session = sessionStorage.GetSession(this.SessionKey, context);
+        this.SessionKey = sessionKey;
+        this.Context = httpContext;
+        this.initialized = true;
+    }
+
+    public UserSession GetSession()
+    {
+        if (!this.initialized)
+        {
+            throw new Exception("UserSessionProvider is not initialized");
+        }
+
+        var session = sessionStorage.GetSession(this.SessionKey!, this.Context!);
         return session;
     }
 

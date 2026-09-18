@@ -1,4 +1,5 @@
 ﻿using Grow.Commons.Throttling;
+using Grow.Domain.Commons;
 using Grow.Infrastructure.Auth;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -65,6 +66,7 @@ public static class AuthExtensions
         services.AddSingleton<UniversalThrottle>();
         services.AddSingleton<SessionStorage>();
         services.AddScoped<UserSessionProvider>();
+        services.AddScoped<IAuthUserSessionProvider, AuthUserSessionProvider>();
 
         services.AddAuthorizationBuilder()
             .AddPolicy(ActionIsRequestedByUserPolicy, policy =>
@@ -85,7 +87,7 @@ public static class AuthExtensions
 
                     try
                     {
-                        var session = sessionProvider.GetSession(httpContext);
+                        var session = sessionProvider.GetSession();
                         return session.IsUserVerified && !session.LoggedOut;
                     }
                     catch
@@ -119,10 +121,10 @@ public static class AuthExtensions
                 var sessionKey = ctx.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
 
                 var sessionProvider = ctx.RequestServices.GetService<UserSessionProvider>();
-                if (sessionProvider != null)
+                if (sessionProvider != null && sessionKey != null)
                 {
-                    sessionProvider.SessionKey = sessionKey;
-                    var session = sessionProvider.GetSession(ctx);
+                    sessionProvider.Initialize(sessionKey, ctx);
+                    var session = sessionProvider.GetSession();
                     session.LastApiCall = DateTime.UtcNow;
                 }
             }

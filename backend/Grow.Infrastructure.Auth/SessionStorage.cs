@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Grow.Domain.Commons;
+using Microsoft.AspNetCore.Http;
 using System.Collections.Concurrent;
 
 namespace Grow.Infrastructure.Auth;
@@ -10,9 +11,9 @@ public class SessionStorage
     //todo scan for long waiting session and delete them
     private readonly ConcurrentDictionary<string, UserSession> notConfirmedSessions = new();
 
-    public string CreateSession(AuthUser user, HttpContext context)
+    public string CreateSession(Guid userId, bool isUserVerified, HttpContext context)
     {
-        if (!user.IsVerified)
+        if (!isUserVerified)
         {
             throw new ArgumentException("User is not verified");
         }
@@ -22,9 +23,9 @@ public class SessionStorage
         {
             SessionKey = SessionKeyGenerator.Generate(),
             LoggedOut = false,
-            UserId = user.Id,
-            IsUserVerified = user.IsVerified,
-            UserAgent = context.Request.Headers["User-Agent"]!,
+            UserId = userId,
+            IsUserVerified = isUserVerified,
+            UserAgent = context.Request.Headers.UserAgent!,
             SessionCreatedAt = DateTime.UtcNow,
         };
 
@@ -32,7 +33,7 @@ public class SessionStorage
         return session.AllowUserToEnterApp(context, isConfirmed: false) == false
             ? throw new Exception($"Session creation is broken.")
             : this.notConfirmedSessions.TryAdd(confirmationKey, session) == false
-            ? throw new Exception($"Cannot save session with key {confirmationKey} for user {user.Id} in memory")
+            ? throw new Exception($"Cannot save session with key {confirmationKey} for user {userId} in memory")
             : confirmationKey;
     }
 

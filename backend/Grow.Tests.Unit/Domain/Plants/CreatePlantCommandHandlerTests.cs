@@ -1,4 +1,5 @@
-using Grow.Domain;
+using Grow.Domain.Commons;
+using Grow.Domain.Commons.Ownership;
 using Grow.Domain.Plants;
 using Grow.Domain.Plants.Handlers;
 using Grow.Domain.Species;
@@ -21,11 +22,19 @@ public class CreatePlantCommandHandlerTests
         return (ctxMock, plantsDbSet);
     }
 
+    private static Mock<IAuthUserSessionProvider> CreateUserSessionProviderMock(Guid userId)
+    {
+        var userSessionProviderMock = new Mock<IAuthUserSessionProvider>();
+        _ = userSessionProviderMock.Setup(x => x.Get()).Returns(new AuthUser(userId, true));
+        return userSessionProviderMock;
+    }
+
     [Test]
     public void HandleAsync_WhenSpecieDoesNotExist_ThrowsArgumentExceptionAndDoesNotSave()
     {
         var (ctxMock, _) = CreateContextMock([]);
-        var handler = new CreatePlantCommandHandler(ctxMock.Object);
+        var userSessionProviderMock = CreateUserSessionProviderMock(Guid.NewGuid());
+        var handler = new CreatePlantCommandHandler(ctxMock.Object, userSessionProviderMock.Object);
         var command = new CreatePlantCommand(Guid.NewGuid(), "plant-01", Guid.NewGuid());
 
         _ = Assert.ThrowsAsync<ArgumentException>(() => handler.HandleAsync(command, CancellationToken.None));
@@ -34,11 +43,27 @@ public class CreatePlantCommandHandlerTests
     }
 
     [Test]
-    public void HandleAsync_WhenCustomIdAlreadyExists_ThrowsArgumentExceptionAndDoesNotSave()
+    public void HandleAsync_WhenUserIsNotSpecieOwner_ThrowsOwnershipExceptionAndDoesNotSave()
     {
         var specie = Specie.Create(Guid.NewGuid(), "Monstera Deliciosa", Guid.NewGuid());
-        var (ctxMock, _) = CreateContextMock([specie], Plant.Create(Guid.NewGuid(), "plant-01", specie.Id, Guid.NewGuid()));
-        var handler = new CreatePlantCommandHandler(ctxMock.Object);
+        var (ctxMock, _) = CreateContextMock([specie]);
+        var userSessionProviderMock = CreateUserSessionProviderMock(Guid.NewGuid());
+        var handler = new CreatePlantCommandHandler(ctxMock.Object, userSessionProviderMock.Object);
+        var command = new CreatePlantCommand(Guid.NewGuid(), "plant-01", specie.Id);
+
+        _ = Assert.ThrowsAsync<OwnershipException>(() => handler.HandleAsync(command, CancellationToken.None));
+
+        ctxMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Test]
+    public void HandleAsync_WhenCustomIdAlreadyExistsForUser_ThrowsArgumentExceptionAndDoesNotSave()
+    {
+        var ownerId = Guid.NewGuid();
+        var specie = Specie.Create(Guid.NewGuid(), "Monstera Deliciosa", ownerId);
+        var (ctxMock, _) = CreateContextMock([specie], Plant.Create(Guid.NewGuid(), "plant-01", specie.Id, ownerId));
+        var userSessionProviderMock = CreateUserSessionProviderMock(ownerId);
+        var handler = new CreatePlantCommandHandler(ctxMock.Object, userSessionProviderMock.Object);
         var command = new CreatePlantCommand(Guid.NewGuid(), "plant-01", specie.Id);
 
         _ = Assert.ThrowsAsync<ArgumentException>(() => handler.HandleAsync(command, CancellationToken.None));
@@ -47,11 +72,32 @@ public class CreatePlantCommandHandlerTests
     }
 
     [Test]
+    public async Task HandleAsync_WhenCustomIdAlreadyExistsForAnotherUser_AddsPlantAndCallsSaveChanges()
+    {
+        var ownerId = Guid.NewGuid();
+        var specie = Specie.Create(Guid.NewGuid(), "Monstera Deliciosa", ownerId);
+        var (ctxMock, plantsDbSet) = CreateContextMock([specie], Plant.Create(Guid.NewGuid(), "plant-01", specie.Id, Guid.NewGuid()));
+        var userSessionProviderMock = CreateUserSessionProviderMock(ownerId);
+        var handler = new CreatePlantCommandHandler(ctxMock.Object, userSessionProviderMock.Object);
+        var command = new CreatePlantCommand(Guid.NewGuid(), "plant-01", specie.Id);
+
+        await handler.HandleAsync(command, CancellationToken.None);
+
+        using (Assert.EnterMultipleScope())
+        {
+            plantsDbSet.Verify(x => x.Add(It.Is<Plant>(p => p.Id == command.Id && p.CustomId == command.CustomId)), Times.Once);
+            ctxMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        }
+    }
+
+    [Test]
     public async Task HandleAsync_WhenSpecieExistsAndCustomIdIsUnique_AddsPlantAndCallsSaveChanges()
     {
-        var specie = Specie.Create(Guid.NewGuid(), "Monstera Deliciosa", Guid.NewGuid());
+        var ownerId = Guid.NewGuid();
+        var specie = Specie.Create(Guid.NewGuid(), "Monstera Deliciosa", ownerId);
         var (ctxMock, plantsDbSet) = CreateContextMock([specie]);
-        var handler = new CreatePlantCommandHandler(ctxMock.Object);
+        var userSessionProviderMock = CreateUserSessionProviderMock(ownerId);
+        var handler = new CreatePlantCommandHandler(ctxMock.Object, userSessionProviderMock.Object);
         var command = new CreatePlantCommand(Guid.NewGuid(), "plant-01", specie.Id);
 
         await handler.HandleAsync(command, CancellationToken.None);
@@ -62,7 +108,8 @@ public class CreatePlantCommandHandlerTests
                 x => x.Add(It.Is<Plant>(p =>
                     p.Id == command.Id &&
                     p.CustomId == command.CustomId &&
-                    p.SpecieId == command.SpecieId)),
+                    p.SpecieId == command.SpecieId &&
+                    p.OwnerId == ownerId)),
                 Times.Once);
 
             ctxMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);

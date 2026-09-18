@@ -6,7 +6,7 @@ public static class CqrsModule
 {
     public static IServiceCollection RegisterCqrs(this IServiceCollection services)
     {
-        _ = services.AddSingleton<IDispatcher, Dispatcher>();
+        _ = services.AddScoped<IDispatcher, Dispatcher>();
 
         _ = services.Scan(scan => scan
             .FromApplicationDependencies()

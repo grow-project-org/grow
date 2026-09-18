@@ -1,4 +1,4 @@
-﻿using Grow.Domain;
+﻿using Grow.Domain.Commons;
 using Grow.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;

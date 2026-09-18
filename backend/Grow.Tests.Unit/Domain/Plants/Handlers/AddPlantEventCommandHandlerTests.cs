@@ -1,5 +1,5 @@
-using Grow.Domain;
 using Grow.Domain.Commons;
+using Grow.Domain.Commons.Ownership;
 using Grow.Domain.Plants;
 using Grow.Domain.Plants.Handlers;
 using MockQueryable.Moq;
@@ -19,12 +19,21 @@ public class AddPlantEventCommandHandlerTests
         return ctxMock;
     }
 
+    private static Mock<IAuthUserSessionProvider> CreateUserSessionProviderMock(Guid userId)
+    {
+        var userSessionProviderMock = new Mock<IAuthUserSessionProvider>();
+        _ = userSessionProviderMock.Setup(x => x.Get()).Returns(new AuthUser(userId, true));
+        return userSessionProviderMock;
+    }
+
     [Test]
     public async Task HandleAsync_WhenPlantExists_AddsEventAndCallsSaveChanges()
     {
-        var plant = Plant.Create(Guid.NewGuid(), "monstera-01", Guid.NewGuid(), Guid.NewGuid());
+        var ownerId = Guid.NewGuid();
+        var plant = Plant.Create(Guid.NewGuid(), "monstera-01", Guid.NewGuid(), ownerId);
         var ctxMock = CreateContextMock(plant);
-        var handler = new AddPlantEventCommandHandler(ctxMock.Object);
+        var userSessionProviderMock = CreateUserSessionProviderMock(ownerId);
+        var handler = new AddPlantEventCommandHandler(ctxMock.Object, userSessionProviderMock.Object);
         var command = new AddPlantEventCommand(plant.Id, Guid.NewGuid(), PlantActionType.Watering, DateTime.UtcNow);
 
         await handler.HandleAsync(command, CancellationToken.None);
@@ -44,7 +53,8 @@ public class AddPlantEventCommandHandlerTests
     public void HandleAsync_WhenPlantDoesNotExist_ThrowsAndDoesNotSave()
     {
         var ctxMock = CreateContextMock();
-        var handler = new AddPlantEventCommandHandler(ctxMock.Object);
+        var userSessionProviderMock = CreateUserSessionProviderMock(Guid.NewGuid());
+        var handler = new AddPlantEventCommandHandler(ctxMock.Object, userSessionProviderMock.Object);
         var command = new AddPlantEventCommand(Guid.NewGuid(), Guid.NewGuid(), PlantActionType.Watering, DateTime.UtcNow);
 
         var thrown = Assert.CatchAsync(() => handler.HandleAsync(command, CancellationToken.None))!;
@@ -55,5 +65,19 @@ public class AddPlantEventCommandHandlerTests
             Assert.That(actual, Is.InstanceOf<InvalidOperationException>());
             ctxMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
         }
+    }
+
+    [Test]
+    public void HandleAsync_WhenUserIsNotPlantOwner_ThrowsOwnershipExceptionAndDoesNotSave()
+    {
+        var plant = Plant.Create(Guid.NewGuid(), "monstera-01", Guid.NewGuid(), Guid.NewGuid());
+        var ctxMock = CreateContextMock(plant);
+        var userSessionProviderMock = CreateUserSessionProviderMock(Guid.NewGuid());
+        var handler = new AddPlantEventCommandHandler(ctxMock.Object, userSessionProviderMock.Object);
+        var command = new AddPlantEventCommand(plant.Id, Guid.NewGuid(), PlantActionType.Watering, DateTime.UtcNow);
+
+        _ = Assert.ThrowsAsync<OwnershipException>(() => handler.HandleAsync(command, CancellationToken.None));
+
+        ctxMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 }

@@ -1,4 +1,4 @@
-﻿using Grow.Domain;
+﻿using Grow.Domain.Commons;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 

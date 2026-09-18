@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Grow.Domain.Commons;
+using Microsoft.AspNetCore.Http;
 
 namespace Grow.Infrastructure.Auth;
 
@@ -13,6 +14,8 @@ public class UserSession
     public required string UserAgent { get; set; }
     public required DateTime SessionCreatedAt { get; set; }
     public DateTime LastApiCall { get; set; }
+
+    public AuthUser ToAuthUser() => new (this.UserId, this.IsUserVerified);
 
     public bool AllowUserToEnterApp(HttpContext context, bool isConfirmed)
     {
@@ -67,7 +70,7 @@ public class UserSession
 
     private bool VerifyHttpContext(HttpContext context)
     {
-        var userAgent = context.Request.Headers["User-Agent"];
+        var userAgent = context.Request.Headers.UserAgent;
 
         return this.UserAgent == userAgent;
     }

@@ -62,7 +62,7 @@ public static class UsersEndpoints
 
         //todo add real confirmation
         //this is shortcut for MVP
-        var confirmationKey = sessionStorage.CreateSession(new AuthUser(user!.Id, true), http);
+        var confirmationKey = sessionStorage.CreateSession(user!.Id, true, http);
         var sessionKey = sessionStorage.ConfirmSession(confirmationKey, http);
 
         var claims = new List<Claim>
@@ -85,7 +85,7 @@ public static class UsersEndpoints
 
     public static async Task<MeResponse> GetMe(IDispatcher dispatcher, HttpContext http, UserSessionProvider sessionProvider, CancellationToken ct)
     {
-        var session = sessionProvider.GetSession(http);
+        var session = sessionProvider.GetSession();
         var user = (await dispatcher.QueryAsync<GetUserByIdQuery, GetUserByIdQueryResult>(new GetUserByIdQuery(session.UserId), ct)).User;
 
         return new MeResponse(user!.Username);
