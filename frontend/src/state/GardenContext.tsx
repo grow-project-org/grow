@@ -5,7 +5,6 @@ import {
   useEffect,
   useMemo,
   useReducer,
-  useRef,
   type ReactNode,
 } from 'react';
 import type { ActionType, GroupType, LogType } from '../types';
@@ -13,7 +12,7 @@ import { gardenReducer, type AddPlantsInput, type GardenState, type LogExtraData
 import { doneKey } from '../domain/schedule';
 import { buildSeed } from '../data/seed';
 import { loadSnapshot, saveSnapshot } from './persistence';
-import { useGardenSync } from '../hooks/useGardenSync';
+import { useBackendSync } from '../hooks/useBackendSync';
 import { useToast } from './ToastContext';
 import type { Plant } from '../types';
 
@@ -55,23 +54,12 @@ export const GardenProvider = ({ children }: { children: ReactNode }) => {
     saveSnapshot(state);
   }, [state]);
 
-  // Load the server snapshot on mount; hydrate the reducer when it arrives.
-  const { push, isSyncing } = useGardenSync(
-    useCallback((remote: GardenState) => dispatch({ kind: 'HYDRATE', state: remote }), []),
-  );
-
-  // Debounced push of local edits to the backend once it becomes reachable.
-  const pushRef = useRef(push);
-  pushRef.current = push;
-  const firstRun = useRef(true);
-  useEffect(() => {
-    if (firstRun.current) {
-      firstRun.current = false;
-      return;
-    }
-    const timer = setTimeout(() => pushRef.current(state), 800);
-    return () => clearTimeout(timer);
-  }, [state]);
+  // Mirrors creates/events to the backend wherever it has a matching
+  // endpoint; local state above stays authoritative regardless. There is no
+  // `HYDRATE`-from-server path anymore — TODO(backend): no GET endpoint
+  // exists to read plants/groups back, so a second device can't pull this
+  // garden at all yet, only push its own.
+  const { isSyncing } = useBackendSync(state, dispatch);
 
   const plantById = useCallback(
     (id: number) => state.garden.find((p) => p.id === id),
@@ -88,6 +76,8 @@ export const GardenProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const toggleToday = useCallback(
+    // TODO(backend): unchecking (UNDO_TODAY) is local-only — there's no
+    // endpoint to delete/undo a `PlantEvent` already pushed by useBackendSync.
     (id: number, type: ActionType) => {
       if (state.done[doneKey(id, type)]) {
         dispatch({ kind: 'UNDO_TODAY', id, type });
@@ -98,6 +88,9 @@ export const GardenProvider = ({ children }: { children: ReactNode }) => {
     [state.done],
   );
 
+  // TODO(backend): prune/harvest/custom stay local-only — `PlantActionType`
+  // only has Watering/Fertilizing server-side, there's no generic
+  // "log a note against a plant" endpoint.
   const logExtra = useCallback(
     (ids: number[], type: LogType, message: string, data?: LogExtraData) => {
       if (!ids.length) return;
@@ -107,6 +100,8 @@ export const GardenProvider = ({ children }: { children: ReactNode }) => {
     [flash],
   );
 
+  // TODO(backend): repotting is local-only — no endpoint updates a plant's
+  // pot size or logs a repot event.
   const repot = useCallback(
     (id: number, potL: number | null, potCm: number | null, message: string) => {
       dispatch({ kind: 'REPOT', id, potL, potCm });

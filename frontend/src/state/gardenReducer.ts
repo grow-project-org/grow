@@ -58,7 +58,14 @@ export type GardenAction =
   | { kind: 'TOGGLE_GROUP_MEMBER'; id: number; group: string }
   | { kind: 'ADD_GROUP'; name: string; type: GroupType }
   | { kind: 'DISMISS_WARNING'; group: string }
-  | { kind: 'HYDRATE'; state: GardenState };
+  | { kind: 'HYDRATE'; state: GardenState }
+  // Backend sync bookkeeping (see hooks/useBackendSync.ts) — these never
+  // originate from user interaction, only from a create call succeeding.
+  | { kind: 'ADD_SPECIES_FROM_SERVER'; species: Species }
+  | { kind: 'SET_SPECIES_REMOTE_ID'; name: string; remoteId: string }
+  | { kind: 'SET_PLANT_REMOTE_ID'; id: number; remoteId: string }
+  | { kind: 'SET_GROUP_REMOTE_ID'; name: string; remoteId: string }
+  | { kind: 'MARK_LOG_ENTRY_SYNCED'; uid: number };
 
 const GROUP_TYPE_EMOJI: Record<GroupType, string> = {
   work: '⚡',
@@ -225,6 +232,43 @@ export const gardenReducer = (state: GardenState, action: GardenAction): GardenS
 
     case 'HYDRATE':
       return action.state;
+
+    case 'ADD_SPECIES_FROM_SERVER':
+      return state.species.some((s) => s.name === action.species.name)
+        ? state
+        : { ...state, species: [...state.species, action.species] };
+
+    case 'SET_SPECIES_REMOTE_ID':
+      return {
+        ...state,
+        species: state.species.map((s) =>
+          s.name === action.name ? { ...s, remoteId: action.remoteId } : s,
+        ),
+      };
+
+    case 'SET_PLANT_REMOTE_ID':
+      return {
+        ...state,
+        garden: state.garden.map((p) =>
+          p.id === action.id ? { ...p, remoteId: action.remoteId } : p,
+        ),
+      };
+
+    case 'SET_GROUP_REMOTE_ID':
+      return {
+        ...state,
+        groups: state.groups.map((g) =>
+          g.name === action.name ? { ...g, remoteId: action.remoteId } : g,
+        ),
+      };
+
+    case 'MARK_LOG_ENTRY_SYNCED':
+      return {
+        ...state,
+        log: state.log.map((e) =>
+          e.uid === action.uid ? { ...e, syncedToServer: true } : e,
+        ),
+      };
 
     default:
       return state;

@@ -3,6 +3,7 @@ import { PhoneFrame } from './PhoneFrame';
 import { BottomNav } from './BottomNav';
 import { Toast } from '../feedback/Toast';
 import { ServerStatusPopup } from '../feedback/ServerStatusPopup';
+import { AccountBadge } from '../auth/AccountBadge';
 
 /** App chrome shared by every route: device frame, page outlet, nav and toast. */
 export const AppShell = () => (
@@ -12,6 +13,7 @@ export const AppShell = () => (
       <>
         <Toast />
         <ServerStatusPopup />
+        <AccountBadge />
       </>
     }
   >

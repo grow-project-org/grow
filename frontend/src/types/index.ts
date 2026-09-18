@@ -43,12 +43,19 @@ export interface Plant {
   lastWater: string;
   /** ISO date of the last fertilising, or null if never / not applicable. */
   lastFert: string | null;
+  /** Backend `Plant.Id` (Guid) once this instance has been pushed to the
+   *  server, or `undefined` if it only exists locally so far — there's no
+   *  GET endpoint to read it back, so this is set purely from create-call
+   *  responses. */
+  remoteId?: string;
 }
 
 export interface Group {
   name: string;
   emoji: string;
   type: GroupType;
+  /** Backend `PlantGroup.Id` (Guid) once created server-side. */
+  remoteId?: string;
 }
 
 export interface LogEntry {
@@ -66,6 +73,10 @@ export interface LogEntry {
   readonly weight?: number | null;
   /** Custom event only: free-text description. */
   readonly note?: string;
+  /** Water/fert entries only: already pushed to `POST /plants/{id}/events`.
+   *  TODO(backend): repot/prune/harvest/custom entries never sync — there's
+   *  no matching event type or endpoint for them. */
+  readonly syncedToServer?: boolean;
 }
 
 /**
@@ -83,4 +94,7 @@ export interface Species {
   w: number | null;
   /** Fertilising interval in days, or `null` if not tracked. */
   f: number | null;
+  /** Backend `Specie.Id` (Guid) once created/matched server-side — required
+   *  before a `Plant` referencing this species can be pushed to the backend. */
+  remoteId?: string;
 }
