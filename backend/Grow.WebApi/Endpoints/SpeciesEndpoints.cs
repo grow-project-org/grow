@@ -3,6 +3,7 @@ using Grow.Domain.Species.Handlers;
 using Grow.Infrastructure.Cqrs;
 using Grow.WebApi.Dtos;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 namespace Grow.WebApi.Endpoints;
 
@@ -23,9 +24,10 @@ public static class SpeciesEndpoints
         return app;
     }
 
-    public static async Task<IEnumerable<SpecieDto>> GetSpecies(IDispatcher dispatcher, CancellationToken ct)
+    public static async Task<IEnumerable<SpecieDto>> GetSpecies(IDispatcher dispatcher, CancellationToken ct, [FromQuery] int from, [FromQuery] [Range(1, 100)] int limit, [FromQuery] string? searchName = null)
     {
-        var species = (await dispatcher.QueryAsync<GetSpeciesQuery, GetSpeciesQueryResult>(new GetSpeciesQuery(), ct)).Species;
+        var query = new GetSpeciesQuery(from, limit, searchName);
+        var species = (await dispatcher.QueryAsync<GetSpeciesQuery, GetSpeciesQueryResult>(query, ct)).Species;
         return species.Select(SpecieDto.From);
     }
 
