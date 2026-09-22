@@ -166,7 +166,7 @@ public class PlantsTests : IntegrationTestBase
         _ = await this.client.PostAsJsonAsync("/api/plants", matchingOnePlant);
         _ = await this.client.PostAsJsonAsync("/api/plants", matchingTwoPlant);
 
-        var response = await this.client.GetAsync("/api/plants?searchText=monstera");
+        var response = await this.client.GetAsync("/api/plants?searchText=monstera?from=0&limit=20");
         var result = await response.Content.ReadFromJsonAsync<PlantDto[]>();
 
         using(Assert.EnterMultipleScope())
@@ -187,7 +187,7 @@ public class PlantsTests : IntegrationTestBase
         var createResponse = await this.client.PostAsJsonAsync("/api/plants", request);
         var createdPlant = await createResponse.Content.ReadFromJsonAsync<CreatePlantResponse>();
 
-        var response = await this.client.GetAsync("/api/plants?searchText=Bambus");
+        var response = await this.client.GetAsync("/api/plants?searchText=Bambus?from=0&limit=20");
         var result = await response.Content.ReadFromJsonAsync<PlantDto[]>();
 
         using (Assert.EnterMultipleScope())
@@ -238,7 +238,7 @@ public class PlantsTests : IntegrationTestBase
 
         Assert.That(plantResponse.StatusCode, Is.EqualTo(HttpStatusCode.OK));
 
-        var response = await this.client.GetAsync("/api/plants?searchText=bambus-one");
+        var response = await this.client.GetAsync("/api/plants?searchText=bambus-one?from=0&limit=20");
         var result = await response.Content.ReadFromJsonAsync<PlantDto[]>();
 
         using (Assert.EnterMultipleScope())
