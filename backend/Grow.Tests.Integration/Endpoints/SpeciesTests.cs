@@ -13,7 +13,7 @@ public class SpeciesTests : IntegrationTestBase
     [Test]
     public async Task GetSpecies_WhenNoSpeciesExist_ShouldReturnEmptyList()
     {
-        var response = await this.client.GetAsync("/api/species");
+        var response = await this.client.GetAsync("/api/species?from=0&limit=10");
         var result = await response.Content.ReadFromJsonAsync<SpecieDto[]>();
 
         using (Assert.EnterMultipleScope())
@@ -33,13 +33,57 @@ public class SpeciesTests : IntegrationTestBase
         var firstId = await this.CreateSpecieAsync(firstName);
         var secondId = await this.CreateSpecieAsync(secondName);
 
-        var response = await this.client.GetAsync("/api/species");
+        var response = await this.client.GetAsync("/api/species?from=0&limit=10");
         var result = await response.Content.ReadFromJsonAsync<SpecieDto[]>();
 
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
         Assert.That(result, Is.Not.Null);
         Assert.That(result!.Select(s => s.Id), Is.EquivalentTo([firstId, secondId]));
         Assert.That(result!.Select(s => s.Name), Is.EquivalentTo([firstName, secondName]));
+    }
+
+    [Test]
+    public async Task GetSpecies_WhenLimitIsLessThanTotalSpecies_ShouldReturnLimitedList()
+    {
+        await this.CreateSpecieAsync($"monstera-{Guid.NewGuid()}");
+        await this.CreateSpecieAsync($"fern-{Guid.NewGuid()}");
+
+        var response = await this.client.GetAsync("/api/species?from=0&limit=1");
+        var result = await response.Content.ReadFromJsonAsync<SpecieDto[]>();
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        Assert.That(result, Has.Length.EqualTo(1));
+    }
+
+    [Test]
+    public async Task GetSpecies_WhenSearchNameIsProvided_ShouldReturnOnlyMatchingSpecies()
+    {
+        var matchingName = $"monstera-{Guid.NewGuid()}";
+        var matchingId = await this.CreateSpecieAsync(matchingName);
+        await this.CreateSpecieAsync($"fern-{Guid.NewGuid()}");
+
+        var response = await this.client.GetAsync($"/api/species?from=0&limit=10&searchName=monstera");
+        var result = await response.Content.ReadFromJsonAsync<SpecieDto[]>();
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result!.Select(s => s.Id), Is.EquivalentTo([matchingId]));
+    }
+
+    [Test]
+    public async Task GetSpecies_WhenLimitIsBelowAllowedRange_ShouldReturnBadRequest()
+    {
+        var response = await this.client.GetAsync("/api/species?from=0&limit=0");
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+    }
+
+    [Test]
+    public async Task GetSpecies_WhenLimitIsAboveAllowedRange_ShouldReturnBadRequest()
+    {
+        var response = await this.client.GetAsync("/api/species?from=0&limit=101");
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
     }
 
     [Test]
@@ -98,7 +142,7 @@ public class SpeciesTests : IntegrationTestBase
         var otherUsersSpecieResponse = await otherClient.PostAsJsonAsync("/api/species", otherUsersSpecieRequest);
         var otherUsersSpecie = await otherUsersSpecieResponse.Content.ReadFromJsonAsync<CreateSpecieResponse>();
 
-        var response = await this.client.GetAsync("/api/species");
+        var response = await this.client.GetAsync("/api/species?from=0&limit=10");
         var result = await response.Content.ReadFromJsonAsync<SpecieDto[]>();
 
         Assert.That(result, Is.Not.Null);

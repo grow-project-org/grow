@@ -30,7 +30,7 @@ public class GetSpeciesQueryHandlerTests
         var userSessionProviderMock = CreateUserSessionProviderMock(Guid.NewGuid());
         var handler = new GetSpeciesQueryHandler(ctxMock.Object, userSessionProviderMock.Object);
 
-        var result = await handler.HandleAsync(new GetSpeciesQuery(), CancellationToken.None);
+        var result = await handler.HandleAsync(new GetSpeciesQuery(0, 10, null), CancellationToken.None);
 
         Assert.That(result.Species, Is.Empty);
     }
@@ -46,7 +46,7 @@ public class GetSpeciesQueryHandlerTests
         var userSessionProviderMock = CreateUserSessionProviderMock(ownerId);
         var handler = new GetSpeciesQueryHandler(ctxMock.Object, userSessionProviderMock.Object);
 
-        var result = await handler.HandleAsync(new GetSpeciesQuery(), CancellationToken.None);
+        var result = await handler.HandleAsync(new GetSpeciesQuery(0, 10, null), CancellationToken.None);
 
         Assert.That(result.Species, Is.EquivalentTo(new[] { ownSpecie, publicSpecie }));
     }
@@ -58,8 +58,54 @@ public class GetSpeciesQueryHandlerTests
         var userSessionProviderMock = CreateUserSessionProviderMock(Guid.NewGuid());
         var handler = new GetSpeciesQueryHandler(ctxMock.Object, userSessionProviderMock.Object);
 
-        var result = await handler.HandleAsync(new GetSpeciesQuery(), CancellationToken.None);
+        var result = await handler.HandleAsync(new GetSpeciesQuery(0, 10, null), CancellationToken.None);
 
         Assert.That(result.Species, Is.Empty);
+    }
+
+    [Test]
+    public async Task HandleAsync_WhenTakeIsLessThanTotalSpecies_ReturnsLimitedResult()
+    {
+        var ownerId = Guid.NewGuid();
+        var firstSpecie = Specie.Create(Guid.NewGuid(), "Monstera Deliciosa", ownerId);
+        var secondSpecie = Specie.Create(Guid.NewGuid(), "Boston Fern", ownerId);
+        var thirdSpecie = Specie.Create(Guid.NewGuid(), "Cactus", ownerId);
+        var ctxMock = CreateContextMock(firstSpecie, secondSpecie, thirdSpecie);
+        var userSessionProviderMock = CreateUserSessionProviderMock(ownerId);
+        var handler = new GetSpeciesQueryHandler(ctxMock.Object, userSessionProviderMock.Object);
+
+        var result = await handler.HandleAsync(new GetSpeciesQuery(0, 2, null), CancellationToken.None);
+
+        Assert.That(result.Species, Has.Exactly(2).Items);
+    }
+
+    [Test]
+    public async Task HandleAsync_WhenSkipIsGreaterThanZero_SkipsFirstRecords()
+    {
+        var ownerId = Guid.NewGuid();
+        var firstSpecie = Specie.Create(Guid.NewGuid(), "Monstera Deliciosa", ownerId);
+        var secondSpecie = Specie.Create(Guid.NewGuid(), "Boston Fern", ownerId);
+        var ctxMock = CreateContextMock(firstSpecie, secondSpecie);
+        var userSessionProviderMock = CreateUserSessionProviderMock(ownerId);
+        var handler = new GetSpeciesQueryHandler(ctxMock.Object, userSessionProviderMock.Object);
+
+        var result = await handler.HandleAsync(new GetSpeciesQuery(1, 10, null), CancellationToken.None);
+
+        Assert.That(result.Species, Is.EquivalentTo(new[] { secondSpecie }));
+    }
+
+    [Test]
+    public async Task HandleAsync_WhenSearchNameIsProvided_ReturnsOnlyMatchingSpecies()
+    {
+        var ownerId = Guid.NewGuid();
+        var matchingSpecie = Specie.Create(Guid.NewGuid(), "Monstera Deliciosa", ownerId);
+        var nonMatchingSpecie = Specie.Create(Guid.NewGuid(), "Boston Fern", ownerId);
+        var ctxMock = CreateContextMock(matchingSpecie, nonMatchingSpecie);
+        var userSessionProviderMock = CreateUserSessionProviderMock(ownerId);
+        var handler = new GetSpeciesQueryHandler(ctxMock.Object, userSessionProviderMock.Object);
+
+        var result = await handler.HandleAsync(new GetSpeciesQuery(0, 10, "Monstera"), CancellationToken.None);
+
+        Assert.That(result.Species, Is.EquivalentTo(new[] { matchingSpecie }));
     }
 }
