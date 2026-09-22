@@ -2,6 +2,7 @@ using Grow.Domain.Commons;
 using Grow.Domain.Plants;
 using Grow.Domain.Plants.Handlers;
 using Grow.Infrastructure.Cqrs;
+using Grow.WebApi.Dtos;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Grow.WebApi.Endpoints;
@@ -25,12 +26,19 @@ public static class PlantsEndpoints
         _ = group.MapPost("/{plantId:guid}/events", AddEvent);
         _ = group.MapPost("/{plantId:guid}/groups/{plantGroupId:guid}", AddToGroup);
         _ = group.MapDelete("/{plantId:guid}/groups/{plantGroupId:guid}", RemoveFromGroup);
+        _ = group.MapGet("/", SearchPlants);
 
         var plantGroup = app.MapGroup("/api/plant-groups").WithTags("Plant Groups");
 
         _ = plantGroup.MapPost("/", CreateGroup);
 
         return app;
+    }
+
+    public static async Task<IEnumerable<PlantDto>> SearchPlants(IDispatcher dispatcher, [FromQuery] string? searchText, CancellationToken ct)
+    {
+        var plants = await dispatcher.QueryAsync<SearchPlantsQuery, SearchPlantsQueryResult>(new SearchPlantsQuery(searchText), ct);
+        return plants.Plants.Select(PlantDto.From);
     }
 
     public static async Task<CreatePlantGroupResponse> CreateGroup(IDispatcher dispatcher, [FromBody] CreatePlantGroupRequest request, CancellationToken ct)
