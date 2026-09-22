@@ -23,9 +23,10 @@ public static class SpeciesEndpoints
         return app;
     }
 
-    public static async Task<IEnumerable<SpecieDto>> GetSpecies(IDispatcher dispatcher, CancellationToken ct)
+    public static async Task<IEnumerable<SpecieDto>> GetSpecies(IDispatcher dispatcher, CancellationToken ct, [FromQuery] int from, [FromQuery] int limit, [FromQuery] string? searchName = null)
     {
-        var species = (await dispatcher.QueryAsync<GetSpeciesQuery, GetSpeciesQueryResult>(new GetSpeciesQuery(), ct)).Species;
+        var query = new GetSpeciesQuery(from, limit, searchName);
+        var species = (await dispatcher.QueryAsync<GetSpeciesQuery, GetSpeciesQueryResult>(query, ct)).Species;
         return species.Select(SpecieDto.From);
     }
 
