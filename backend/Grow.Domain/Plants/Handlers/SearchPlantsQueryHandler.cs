@@ -16,9 +16,14 @@ public class SearchPlantsQueryHandler(IDatabaseContext databaseContext, IAuthUse
 
         if (!string.IsNullOrWhiteSpace(query.SearchText))
         {
-            plantsQuery = plantsQuery.Where(x => 
+            var specieIds = await databaseContext.Species
+                .Where(x => x.Name.Contains(query.SearchText))
+                .Select(x => x.Id)
+                .ToArrayAsync(ct);
+
+            plantsQuery = plantsQuery.Where(x => query.SearchText == null ||
                 x.CustomId.Contains(query.SearchText) ||
-                databaseContext.Species.Any(specie => specie.Id == x.SpecieId && specie.Name.Contains(query.SearchText)));
+                specieIds.Contains(x.SpecieId));
         }
 
         plantsQuery = plantsQuery.Skip(query.From).Take(query.Limit);
