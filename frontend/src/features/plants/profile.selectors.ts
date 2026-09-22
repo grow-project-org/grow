@@ -1,8 +1,10 @@
-import type { ActionType, Group, LogEntry, LogType, Plant, Species } from '../../types';
-import { fmtLong, fmtShort } from '../../utils/date';
-import { avatarBg, interval } from '../../domain/species';
-import { dueDate, lastOf, relLabel } from '../../domain/schedule';
-import { regionLabel } from '../../domain/regions';
+import type { ActionType, Group, Plant, Species } from '../../types';
+import { fmtShort } from '../../utils/date';
+import { ACTION_META, ACTION_TYPES } from '../../domain/actions';
+import { avatarBg, interval, speciesName } from '../../domain/species';
+import { lastDate, nextDate, relLabel } from '../../domain/schedule';
+import { groupsOf, regionLabel } from '../../domain/regions';
+import { GROUP_TYPE_META } from '../../domain/groups';
 import { relColors } from '../../components/ui/relColors';
 
 export interface ScheduleItem {
@@ -14,127 +16,78 @@ export interface ScheduleItem {
   rel: string;
   ink: string;
   pill: string;
-}
-
-export interface HistoryItem {
-  key: number;
-  emoji: string;
-  label: string;
-  bg: string;
-  date: string;
-  showLine: boolean;
+  tracked: boolean;
 }
 
 export interface GroupTag {
+  id: string;
   name: string;
   emoji: string;
 }
 
 export interface ProfileView {
+  name: string;
+  initial: string;
   avatarBg: string;
   region: string;
   groups: GroupTag[];
   schedule: ScheduleItem[];
-  history: HistoryItem[];
-  histCount: string;
-  potText: string;
-  potNote: string;
 }
 
-const SCHEDULE_META: Record<ActionType, { emoji: string; bg: string; label: string }> = {
-  water: { emoji: '💧', bg: 'var(--color-water-bg)', label: 'Podlewanie' },
-  fert: { emoji: '🌱', bg: 'var(--color-fert-bg)', label: 'Nawożenie' },
+const SCHEDULE_BG: Record<ActionType, string> = {
+  water: 'var(--color-water-bg)',
+  fert: 'var(--color-fert-bg)',
 };
 
-const LOG_META: Record<LogType, { emoji: string; label: string; bg: string }> = {
-  water: { emoji: '💧', label: 'Podlano', bg: 'var(--color-water-bg)' },
-  fert: { emoji: '🌱', label: 'Nawożono', bg: 'var(--color-fert-bg)' },
-  repot: { emoji: '🪴', label: 'Przesadzono', bg: '#ffd6e6' },
-  add: { emoji: '🌱', label: 'Dodano do ogrodu', bg: '#e2f5d8' },
-  prune: { emoji: '✂️', label: 'Podcięto', bg: '#e8e2ff' },
-  harvest: { emoji: '🧺', label: 'Zbiór', bg: '#ffe9c7' },
-  custom: { emoji: '📝', label: 'Zdarzenie', bg: '#eee7dd' },
-};
+const NEUTRAL = { bg: 'var(--color-chip)', ink: 'var(--color-muted)' };
 
-const describe = (e: LogEntry): string => {
-  const meta = LOG_META[e.type];
-  if (e.type === 'repot' && (e.potL != null || e.potCm != null)) {
-    const size = e.potL != null ? `${e.potL} l` : `Ø ${e.potCm} cm`;
-    return `${meta.label} → ${size}`;
-  }
-  if (e.type === 'harvest' && (e.qty != null || e.weight != null)) {
-    const parts: string[] = [];
-    if (e.qty != null) parts.push(`${e.qty} szt.`);
-    if (e.weight != null) parts.push(`${e.weight} g`);
-    return `${meta.label}: ${parts.join(', ')}`;
-  }
-  if (e.type === 'custom' && e.note) return e.note;
-  return meta.label;
-};
+const buildSchedule = (
+  species: readonly Species[],
+  plant: Plant,
+  today: string,
+): ScheduleItem[] =>
+  ACTION_TYPES.map((type) => {
+    const iv = interval(species, plant.specieId, type);
+    const last = lastDate(plant, type);
+    const next = nextDate(plant, type);
+    const rel = next ? relLabel(next, today) : null;
+    const colors = rel ? relColors(rel) : NEUTRAL;
 
-const buildSchedule = (species: readonly Species[], p: Plant): ScheduleItem[] =>
-  (['water', 'fert'] as const)
-    .map((type): ScheduleItem | null => {
-      const iv = interval(species, p.species, type);
-      if (iv == null) return null;
-      const due = dueDate(species, p, type) as string;
-      const rel = relLabel(due);
-      const colors = relColors(rel);
-      return {
-        type,
-        ...SCHEDULE_META[type],
-        detail: `co ${iv} dni · ostatnio ${fmtShort(lastOf(p, type))}`,
-        rel: rel.text,
-        ink: colors.ink,
-        pill: colors.bg,
-      };
-    })
-    .filter((x): x is ScheduleItem => x !== null);
+    const detail = iv == null
+      ? 'Gatunek nie ma ustawionego interwału'
+      : `co ${iv} dni · ostatnio ${fmtShort(last)}`;
 
-const buildHistory = (p: Plant, log: readonly LogEntry[]): HistoryItem[] => {
-  const entries = log
-    .filter((e) => e.id === p.id)
-    .sort((a, b) => b.date.localeCompare(a.date) || b.uid - a.uid);
-  return entries.map((e, i) => {
-    const meta = LOG_META[e.type];
     return {
-      key: e.uid,
-      emoji: meta.emoji,
-      label: describe(e),
-      bg: meta.bg,
-      date: `${fmtLong(e.date)} ${e.date.slice(0, 4)}`,
-      showLine: i < entries.length - 1,
+      type,
+      emoji: ACTION_META[type].emoji,
+      bg: SCHEDULE_BG[type],
+      label: ACTION_META[type].label,
+      detail,
+      rel: rel ? rel.text : 'brak terminu',
+      ink: colors.ink,
+      pill: colors.bg,
+      tracked: iv != null,
     };
   });
-};
-
-const potText = (p: Plant): string => {
-  if (p.potL != null) return `${p.potL} l${p.potCm ? ` · Ø ${p.potCm} cm` : ''}`;
-  if (p.potCm != null) return `Ø ${p.potCm} cm`;
-  return 'Nie podano';
-};
 
 export const selectProfile = (
   species: readonly Species[],
-  p: Plant,
-  log: readonly LogEntry[],
+  plant: Plant,
   groups: readonly Group[],
+  today: string,
 ): ProfileView => {
-  const history = buildHistory(p, log);
+  const name = speciesName(species, plant.specieId);
+
   return {
-    avatarBg: avatarBg(p.id),
-    region: regionLabel(p, groups),
-    groups: p.groups.map((name) => ({
-      name,
-      emoji: groups.find((g) => g.name === name)?.emoji ?? '📁',
+    name,
+    initial: name.slice(0, 1).toUpperCase(),
+    avatarBg: avatarBg(plant.id),
+    region: regionLabel(plant, groups),
+    groups: groupsOf(plant, groups).map((g) => ({
+      id: g.id,
+      name: g.name,
+      emoji: GROUP_TYPE_META[g.type].emoji,
     })),
-    schedule: buildSchedule(species, p),
-    history,
-    histCount: `${history.length} wpisów`,
-    potText: potText(p),
-    potNote:
-      p.potL != null
-        ? 'Wpływa na częstotliwość podlewania'
-        : 'Dodaj, by lepiej prognozować podlewanie',
+    schedule: buildSchedule(species, plant, today),
   };
 };

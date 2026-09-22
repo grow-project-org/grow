@@ -1,38 +1,28 @@
 import { useState } from 'react';
 import type { GroupType } from '../../types';
 import { useGarden } from '../../state/GardenContext';
-import { EXTRA_ACTIONS } from '../../domain/extraActions';
 import { CheckIcon, PlusIcon } from '../../components/ui/icons';
-import { IconButton } from '../../components/ui/IconButton';
-import { MoreVerticalIcon } from '../../components/ui/icons';
 import { CheckToggle } from '../../components/ui/CheckToggle';
-import { ActionGridSheet } from '../../components/sheet/ActionGridSheet';
 import { AddGroupSheet } from './AddGroupSheet';
 import { PlantPickerSheet } from './PlantPickerSheet';
 import { selectGroups, type GroupAction } from './groups.selectors';
 import styles from './GroupsPage.module.css';
 
-type Sheet =
-  | { kind: 'actions'; group: string }
-  | { kind: 'picker'; group: string }
-  | { kind: 'addGroup' }
-  | null;
+type Sheet = { kind: 'picker'; groupId: string } | { kind: 'addGroup' } | null;
 
 export const GroupsPage = () => {
   const garden = useGarden();
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [sheet, setSheet] = useState<Sheet>(null);
 
-  const cards = selectGroups(garden.species, garden.garden, garden.groups, garden.done, garden.dismissed);
-
-  const toggleExpand = (key: string) =>
-    setExpanded((cur) => ({ ...cur, [key]: !cur[key] }));
-
-  const runAction = (action: GroupAction, ids: number[], message: string) =>
-    garden.commitAction(ids, action.type, message);
-
+  const cards = selectGroups(garden.species, garden.plants, garden.groups, garden.today);
   const activeGroup =
-    sheet && sheet.kind !== 'addGroup' ? sheet.group : undefined;
+    sheet?.kind === 'picker' ? garden.groups.find((g) => g.id === sheet.groupId) : undefined;
+
+  const toggleExpand = (key: string) => setExpanded((cur) => ({ ...cur, [key]: !cur[key] }));
+
+  const runAction = (action: GroupAction, ids: string[], message: string) =>
+    void garden.commitAction(ids, action.type, message);
 
   return (
     <div className={styles.page}>
@@ -46,7 +36,7 @@ export const GroupsPage = () => {
 
       <div className={styles.list}>
         {cards.map((card) => (
-          <article key={card.name} className={styles.card}>
+          <article key={card.id} className={styles.card}>
             <div className={styles.cardHead}>
               <div className={styles.cardEmoji}>{card.emoji}</div>
               <div className={styles.cardText}>
@@ -58,9 +48,6 @@ export const GroupsPage = () => {
                   <span className={styles.memberSub}>{card.memberSub}</span>
                 </div>
               </div>
-              <IconButton soft aria-label="Więcej" onClick={() => setSheet({ kind: 'actions', group: card.name })}>
-                <MoreVerticalIcon />
-              </IconButton>
             </div>
 
             {card.isRegion && (
@@ -85,9 +72,6 @@ export const GroupsPage = () => {
                     Rośliny mają różny rytm — akcja zbiorcza rzadko obejmie wszystkie. Zwykle warto
                     rozbić grupę.
                   </div>
-                  <button type="button" className={styles.warningBtn} onClick={() => garden.dismissWarning(card.name)}>
-                    Rozumiem, zignoruj
-                  </button>
                 </div>
               </div>
             )}
@@ -101,8 +85,9 @@ export const GroupsPage = () => {
 
             <div className={styles.actions}>
               {card.actions.map((action) => {
-                const key = `${card.name}:${action.type}`;
+                const key = `${card.id}:${action.type}`;
                 const isOpen = !!expanded[key];
+
                 return (
                   <div key={action.type} className={styles.action}>
                     <div className={styles.actionHead}>
@@ -151,18 +136,6 @@ export const GroupsPage = () => {
                       </div>
                     )}
 
-                    {action.alignable && (
-                      <button
-                        type="button"
-                        className={styles.alignBtn}
-                        onClick={() =>
-                          runAction(action, action.allIds, `🔁 Wyrównano rytm w „${card.name}”`)
-                        }
-                      >
-                        🔁 Wyrównaj rytm
-                      </button>
-                    )}
-
                     <button type="button" className={styles.expandBtn} onClick={() => toggleExpand(key)}>
                       {isOpen ? 'Ukryj listę' : 'Które konkretnie?'}
                     </button>
@@ -178,7 +151,10 @@ export const GroupsPage = () => {
                             <span className={styles.rowState}>{row.stateLabel}</span>
                             <CheckToggle
                               checked={row.done}
-                              onClick={() => garden.toggleToday(row.id, action.type)}
+                              disabled={row.done}
+                              onClick={() =>
+                                runAction(action, [row.id], `${action.emoji} ${action.verb} ${row.name}`)
+                              }
                               size={30}
                               radius={9}
                             />
@@ -192,48 +168,40 @@ export const GroupsPage = () => {
             </div>
 
             <div className={styles.footer}>
-              <button type="button" className={styles.footerBtn} onClick={() => setSheet({ kind: 'picker', group: card.name })}>
+              <button
+                type="button"
+                className={styles.footerBtn}
+                onClick={() => setSheet({ kind: 'picker', groupId: card.id })}
+              >
                 <PlusIcon size={14} />
                 Rośliny w grupie
               </button>
             </div>
           </article>
         ))}
-      </div>
 
-      <ActionGridSheet
-        open={sheet?.kind === 'actions'}
-        onClose={() => setSheet(null)}
-        kicker="Akcja dla grupy"
-        title={activeGroup ?? ''}
-        onAddPlants={() => activeGroup && setSheet({ kind: 'picker', group: activeGroup })}
-        actions={EXTRA_ACTIONS.filter((a) => a.kind !== 'custom').map((a) => ({
-          emoji: a.emoji,
-          label: a.label,
-          onClick: () => {
-            if (!activeGroup) return;
-            const memberIds = garden.garden
-              .filter((p) => p.groups.includes(activeGroup))
-              .map((p) => p.id);
-            garden.logExtra(memberIds, a.kind, `${a.emoji} ${a.label} · „${activeGroup}”`);
-            setSheet(null);
-          },
-        }))}
-      />
+        {!garden.isLoading && !cards.length && (
+          <p className={styles.memberSub}>Nie masz jeszcze żadnych grup.</p>
+        )}
+      </div>
 
       <PlantPickerSheet
         open={sheet?.kind === 'picker'}
         onClose={() => setSheet(null)}
-        groupName={activeGroup ?? ''}
-        garden={garden.garden}
-        onToggle={(id) => activeGroup && garden.toggleGroupMember(id, activeGroup)}
+        group={activeGroup}
+        plants={garden.plants}
+        species={garden.species}
+        groups={garden.groups}
+        onToggle={(plantId, member) =>
+          activeGroup && void garden.setGroupMembership(plantId, activeGroup.id, member)
+        }
       />
 
       <AddGroupSheet
         open={sheet?.kind === 'addGroup'}
         onClose={() => setSheet(null)}
         onCreate={(name: string, type: GroupType) => {
-          garden.addGroup(name, type, `📁 Dodano grupę „${name}”`);
+          void garden.addGroup(name, type);
           setSheet(null);
         }}
       />

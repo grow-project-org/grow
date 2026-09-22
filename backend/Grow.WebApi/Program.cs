@@ -25,7 +25,6 @@ builder.Services
 
 builder.Services.ConfigureCors(builder.Configuration);
 builder.Services.ConfigureAuth();
-builder.Services.AddValidation();
 
 builder.Services.AddRateLimiter(options =>
 {

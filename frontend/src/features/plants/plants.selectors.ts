@@ -1,25 +1,24 @@
 import type { Group, Plant, Species } from '../../types';
-import { TODAY } from '../../config';
-import { diffDays } from '../../utils/date';
-import { avatarBg } from '../../domain/species';
-import { dueDate, relLabel, type DoneMap } from '../../domain/schedule';
+import { avatarBg, speciesName } from '../../domain/species';
+import { isDue, nextDate, relLabel } from '../../domain/schedule';
 import { regionLabel } from '../../domain/regions';
 import { relColors } from '../../components/ui/relColors';
 
 export type PlantsFilter = 'all' | 'water' | 'fert';
 
 export interface InstanceRow {
-  id: number;
+  id: string;
   code: string;
   region: string;
-  emoji: string;
+  initial: string;
   avatarBg: string;
   next: { label: string; bg: string; ink: string };
 }
 
 export interface PlantVariety {
+  specieId: string;
   name: string;
-  emoji: string;
+  initial: string;
   count: number;
   sub: string;
   dueW: number;
@@ -42,74 +41,70 @@ const FILTER_LABEL: Record<PlantsFilter, string> = {
   fert: 'Filtr: do nawożenia dziś',
 };
 
-const isDue = (species: readonly Species[], p: Plant, type: 'water' | 'fert', done: DoneMap): boolean => {
-  const due = dueDate(species, p, type);
-  return due != null && diffDays(due, TODAY) <= 0 && !done[`${p.id}:${type}`];
-};
+const nextPill = (plant: Plant, today: string): InstanceRow['next'] => {
+  const next = nextDate(plant, 'water');
+  if (!next) return { label: '—', bg: 'var(--color-chip)', ink: 'var(--color-muted)' };
 
-const nextPill = (species: readonly Species[], p: Plant): InstanceRow['next'] => {
-  const due = dueDate(species, p, 'water');
-  if (!due) return { label: '—', bg: 'var(--color-chip)', ink: 'var(--color-muted)' };
-  const rel = relLabel(due);
+  const rel = relLabel(next, today);
   return { label: `💧 ${rel.text}`, ...relColors(rel) };
 };
 
-/** Build the collapsed "Rośliny" dashboard grouped by species. */
 export const selectPlants = (
   species: readonly Species[],
   groups: readonly Group[],
-  garden: readonly Plant[],
-  done: DoneMap,
+  plants: readonly Plant[],
+  today: string,
   query: string,
   filter: PlantsFilter,
 ): PlantsView => {
   const q = query.trim().toLowerCase();
-  const total = garden.length;
-  const dueWater = garden.filter((p) => isDue(species, p, 'water', done)).length;
-  const dueFert = garden.filter((p) => isDue(species, p, 'fert', done)).length;
+  const dueWater = plants.filter((p) => isDue(p, 'water', today)).length;
+  const dueFert = plants.filter((p) => isDue(p, 'fert', today)).length;
 
-  const matches = (p: Plant): boolean => {
+  const matches = (plant: Plant): boolean => {
     const textMatch =
       !q ||
-      (p.species || '').toLowerCase().includes(q) ||
-      (p.code || '').toLowerCase().includes(q);
+      speciesName(species, plant.specieId).toLowerCase().includes(q) ||
+      plant.code.toLowerCase().includes(q);
     const filterMatch =
       filter === 'all' ||
-      (filter === 'water' && isDue(species, p, 'water', done)) ||
-      (filter === 'fert' && isDue(species, p, 'fert', done));
+      (filter === 'water' && isDue(plant, 'water', today)) ||
+      (filter === 'fert' && isDue(plant, 'fert', today));
+
     return textMatch && filterMatch;
   };
 
-  const byName = new Map<string, Plant[]>();
-  for (const p of garden.filter(matches)) {
-    const key = p.species ?? 'Bez gatunku';
-    const list = byName.get(key) ?? [];
-    list.push(p);
-    byName.set(key, list);
+  const bySpecie = new Map<string, Plant[]>();
+  for (const plant of plants.filter(matches)) {
+    const list = bySpecie.get(plant.specieId) ?? [];
+    list.push(plant);
+    bySpecie.set(plant.specieId, list);
   }
 
-  const varieties: PlantVariety[] = [...byName.entries()].map(([name, list]) => {
-    const first = list[0];
+  const varieties: PlantVariety[] = [...bySpecie.entries()].map(([specieId, list]) => {
+    const name = speciesName(species, specieId);
+
     return {
+      specieId,
       name,
-      emoji: first.emoji,
+      initial: name.slice(0, 1).toUpperCase(),
       count: list.length,
-      sub: `${list.length} szt · ${regionLabel(first, groups)}`,
-      dueW: list.filter((p) => isDue(species, p, 'water', done)).length,
-      dueF: list.filter((p) => isDue(species, p, 'fert', done)).length,
+      sub: `${list.length} szt · ${regionLabel(list[0], groups)}`,
+      dueW: list.filter((p) => isDue(p, 'water', today)).length,
+      dueF: list.filter((p) => isDue(p, 'fert', today)).length,
       instances: list.map((p) => ({
         id: p.id,
         code: p.code,
         region: regionLabel(p, groups),
-        emoji: p.emoji,
+        initial: name.slice(0, 1).toUpperCase(),
         avatarBg: avatarBg(p.id),
-        next: nextPill(species, p),
+        next: nextPill(p, today),
       })),
     };
   });
 
   return {
-    total,
+    total: plants.length,
     dueWater,
     dueFert,
     varieties,

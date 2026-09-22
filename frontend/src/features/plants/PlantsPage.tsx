@@ -20,13 +20,13 @@ interface StatDef {
 }
 
 export const PlantsPage = () => {
-  const { garden, groups, species, done } = useGarden();
+  const { plants, groups, species, today, isLoading } = useGarden();
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<PlantsFilter>('all');
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
-  const view = selectPlants(species, groups, garden, done, query, filter);
+  const view = selectPlants(species, groups, plants, today, query, filter);
 
   const stats: StatDef[] = [
     { key: 'all', emoji: '🌿', label: 'wszystkich', value: view.total, bg: 'var(--color-card)' },
@@ -76,15 +76,17 @@ export const PlantsPage = () => {
       <div className={styles.list}>
         {view.varieties.map((variety) => (
           <VarietyCard
-            key={variety.name}
+            key={variety.specieId}
             variety={variety}
-            expanded={!!expanded[variety.name]}
-            onToggle={() => toggleExpand(variety.name)}
+            expanded={!!expanded[variety.specieId]}
+            onToggle={() => toggleExpand(variety.specieId)}
             onOpen={(id) => navigate(plantPath(id))}
           />
         ))}
 
-        {view.empty && (
+        {isLoading && <p className={styles.filterLabel}>Wczytywanie…</p>}
+
+        {!isLoading && view.empty && (
           <div className={styles.emptyState}>
             <div className={styles.emptyEmoji}>🔍</div>
             <p className={styles.emptyText}>Brak wyników</p>
@@ -99,13 +101,13 @@ interface VarietyCardProps {
   variety: PlantVariety;
   expanded: boolean;
   onToggle: () => void;
-  onOpen: (id: number) => void;
+  onOpen: (id: string) => void;
 }
 
 const VarietyCard = ({ variety, expanded, onToggle, onOpen }: VarietyCardProps) => (
   <div className={styles.card}>
     <button type="button" className={styles.cardHead} onClick={onToggle}>
-      <Avatar emoji={variety.emoji} bg="#eaf5e4" size={50} radius={15} fontSize={25} />
+      <Avatar label={variety.initial} bg="#eaf5e4" size={50} radius={15} fontSize={22} />
       <span className={styles.cardText}>
         <span className={styles.cardName}>{variety.name}</span>
         <span className={styles.cardSub}>{variety.sub}</span>
@@ -125,7 +127,7 @@ const VarietyCard = ({ variety, expanded, onToggle, onOpen }: VarietyCardProps) 
         {variety.instances.map((inst) => (
           <li key={inst.id}>
             <button type="button" className={styles.instance} onClick={() => onOpen(inst.id)}>
-              <Avatar emoji={inst.emoji} bg={inst.avatarBg} size={38} radius={11} fontSize={18} thinBorder />
+              <Avatar label={inst.initial} bg={inst.avatarBg} size={38} radius={11} fontSize={16} thinBorder />
               <span className={styles.instanceText}>
                 <span className={styles.instanceCode}>{inst.code}</span>
                 <span className={styles.instanceLoc}>{inst.region}</span>

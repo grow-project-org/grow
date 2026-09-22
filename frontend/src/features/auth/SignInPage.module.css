@@ -1,0 +1,39 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100%;
+  padding: 24px 16px;
+}
+
+.logo {
+  font-size: 48px;
+  text-align: center;
+}
+
+.title {
+  margin: 4px 0 0;
+  font-size: 22px;
+  font-weight: 800;
+  text-align: center;
+  color: var(--color-ink);
+}
+
+.desc {
+  margin: 6px 0 16px;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--color-ink-soft);
+}
+
+.error {
+  margin: 10px 0 0;
+  font-size: 13px;
+  text-align: center;
+  color: var(--color-overdue-ink);
+}
+
+.actions {
+  margin-top: 14px;
+}

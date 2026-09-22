@@ -1,15 +1,12 @@
 import type { ActionType, Group, GroupType, Plant, Species } from '../../types';
 import { fmtShort } from '../../utils/date';
+import { ACTION_META } from '../../domain/actions';
+import { GROUP_TYPE_META } from '../../domain/groups';
 import { interval } from '../../domain/species';
-import {
-  dueDate,
-  isDoneToday,
-  isDue,
-  type DoneMap,
-} from '../../domain/schedule';
+import { isDoneToday, isDue, nextDate } from '../../domain/schedule';
 
 export interface GroupActionRow {
-  id: number;
+  id: string;
   name: string;
   sub: string;
   done: boolean;
@@ -27,15 +24,15 @@ export interface GroupAction {
   partial: boolean;
   none: boolean;
   mixedInterval: boolean;
-  alignable: boolean;
   primaryBtn: string;
   allBtn: string;
-  dueIds: number[];
-  allIds: number[];
+  dueIds: string[];
+  allIds: string[];
   rows: GroupActionRow[];
 }
 
 export interface GroupCard {
+  id: string;
   name: string;
   emoji: string;
   type: GroupType;
@@ -53,43 +50,29 @@ export interface GroupCard {
   showWarning: boolean;
 }
 
-const TYPE_META: Record<GroupType, { label: string; bg: string; ink: string }> = {
-  work: { label: 'Grupa robocza', bg: '#e7f0ff', ink: '#2f5fa8' },
-  region: { label: 'Region', bg: '#f3ecff', ink: '#6b4bb0' },
-  adhoc: { label: 'Grupa tymczasowa', bg: '#fff0e0', ink: '#b5701a' },
-};
-
-const ACTION_META: Record<ActionType, { emoji: string; verb: string; label: string }> = {
-  water: { emoji: '💧', verb: 'Podlej', label: 'Podlewanie' },
-  fert: { emoji: '🌱', verb: 'Nawóź', label: 'Nawożenie' },
-};
-
 const buildAction = (
   species: readonly Species[],
-  group: Group,
   members: Plant[],
   type: ActionType,
-  done: DoneMap,
+  today: string,
 ): GroupAction | null => {
-  const tracked = members.filter((p) => interval(species, p.species, type) != null);
+  const tracked = members.filter((p) => interval(species, p.specieId, type) != null);
   if (!tracked.length) return null;
 
-  const dueList = tracked.filter((p) => isDue(species, p, type, done));
-  const intervals = new Set(tracked.map((p) => interval(species, p.species, type)));
-  const dueDates = new Set(tracked.map((p) => dueDate(species, p, type)));
-  const mixedInterval = intervals.size > 1;
-  const canAlign = !mixedInterval && dueDates.size > 1;
+  const dueList = tracked.filter((p) => isDue(p, type, today));
+  const intervals = new Set(tracked.map((p) => interval(species, p.specieId, type)));
   const meta = ACTION_META[type];
 
   const rows: GroupActionRow[] = tracked.map((p) => {
-    const done1 = isDoneToday(done, p.id, type);
-    const nowDue = isDue(species, p, type, done);
+    const done = isDoneToday(p, type, today);
+    const due = isDue(p, type, today);
+
     return {
       id: p.id,
       name: p.code,
-      sub: `co ${interval(species, p.species, type)} dni · nast. ${fmtShort(dueDate(species, p, type))}`,
-      done: done1,
-      stateLabel: done1 ? 'zrobione' : nowDue ? 'dziś' : 'nie dziś',
+      sub: `co ${interval(species, p.specieId, type)} dni · nast. ${fmtShort(nextDate(p, type))}`,
+      done,
+      stateLabel: done ? 'zrobione' : due ? 'dziś' : 'nie dziś',
     };
   });
 
@@ -103,8 +86,7 @@ const buildAction = (
     headStat: `${dueList.length} z ${tracked.length}`,
     partial: dueList.length > 0 && dueList.length < tracked.length,
     none: dueList.length === 0,
-    mixedInterval,
-    alignable: canAlign && group.type !== 'region',
+    mixedInterval: intervals.size > 1,
     primaryBtn: `${meta.verb} potrzebujące · ${dueList.length}`,
     allBtn: `${meta.verb} wszystkie · ${tracked.length}`,
     dueIds: dueList.map((p) => p.id),
@@ -116,21 +98,20 @@ const buildAction = (
 const buildCard = (
   species: readonly Species[],
   group: Group,
-  garden: Plant[],
-  done: DoneMap,
-  dismissed: Record<string, boolean>,
+  plants: readonly Plant[],
+  today: string,
 ): GroupCard => {
-  const members = garden.filter((p) => p.groups.includes(group.name));
-  const water = buildAction(species, group, members, 'water', done);
-  const fert = buildAction(species, group, members, 'fert', done);
+  const members = plants.filter((p) => group.plantIds.includes(p.id));
+  const water = buildAction(species, members, 'water', today);
+  const fert = buildAction(species, members, 'fert', today);
   const actions = [water, fert].filter((a): a is GroupAction => a !== null);
   const totalDue = actions.reduce((sum, a) => sum + a.due, 0);
-  const anyMixed = group.type !== 'region' && actions.some((a) => a.mixedInterval);
-  const meta = TYPE_META[group.type];
+  const meta = GROUP_TYPE_META[group.type];
 
   return {
+    id: group.id,
     name: group.name,
-    emoji: group.emoji,
+    emoji: meta.emoji,
     type: group.type,
     isRegion: group.type === 'region',
     typeLabel: meta.label,
@@ -143,14 +124,13 @@ const buildCard = (
     clearLabel: members.length ? 'Wszystko na dziś ogarnięte' : 'Pusta grupa',
     regionWaterDue: water?.due ?? 0,
     regionFertDue: fert?.due ?? 0,
-    showWarning: anyMixed && !dismissed[group.name],
+    showWarning: group.type !== 'region' && actions.some((a) => a.mixedInterval),
   };
 };
 
 export const selectGroups = (
   species: readonly Species[],
-  garden: Plant[],
-  groups: Group[],
-  done: DoneMap,
-  dismissed: Record<string, boolean>,
-): GroupCard[] => groups.map((g) => buildCard(species, g, garden, done, dismissed));
+  plants: readonly Plant[],
+  groups: readonly Group[],
+  today: string,
+): GroupCard[] => groups.map((g) => buildCard(species, g, plants, today));

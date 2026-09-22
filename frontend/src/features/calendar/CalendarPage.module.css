@@ -134,3 +134,22 @@
   font-size: 14px;
   font-weight: 600;
 }
+
+.monthBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.monthNav {
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 10px;
+  background: var(--color-chip);
+  color: var(--color-ink);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}

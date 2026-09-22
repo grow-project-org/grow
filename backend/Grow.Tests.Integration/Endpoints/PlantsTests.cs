@@ -1,5 +1,6 @@
 using Grow.Domain.Commons;
 using Grow.Domain.Commons.Ownership;
+using Grow.Domain.Plants;
 using Grow.WebApi.Dtos;
 using Grow.WebApi.Endpoints;
 using Microsoft.EntityFrameworkCore;
@@ -247,5 +248,125 @@ public class PlantsTests : IntegrationTestBase
             Assert.That(result, Is.Not.Null);
             Assert.That(result, Is.Empty);
         }
+    }
+
+    [Test]
+    public async Task SearchPlants_WhenPlantHasNoEvents_ShouldReturnEmptyLastExecutionsAndNextDates()
+    {
+        _ = await this.CreatePlantAsync("no-events");
+
+        var response = await this.client.GetAsync("/api/plants?searchText=no-events&from=0&limit=20");
+        var result = await response.Content.ReadFromJsonAsync<PlantDto[]>();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result, Has.Length.EqualTo(1));
+            Assert.That(result![0].LastExecutions, Is.Empty);
+            Assert.That(result![0].NextDates, Is.Empty);
+        }
+    }
+
+    [Test]
+    public async Task SearchPlants_WhenSpecieHasNoInterval_ShouldReturnLastExecutionWithoutNextDate()
+    {
+        var specieId = await this.CreateSpecieAsync();
+        var plantId = await this.CreatePlantAsync("no-interval", specieId);
+        var executedAt = new DateTime(2026, 7, 20, 0, 0, 0, DateTimeKind.Utc);
+
+        _ = await this.client.PostAsJsonAsync($"/api/plants/{plantId}/events", new AddEventRequest(PlantActionType.Watering, executedAt));
+
+        var response = await this.client.GetAsync("/api/plants?searchText=no-interval&from=0&limit=20");
+        var result = await response.Content.ReadFromJsonAsync<PlantDto[]>();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result![0].LastExecutions[PlantActionType.Watering], Is.EqualTo(executedAt));
+            Assert.That(result![0].NextDates, Is.Empty);
+        }
+    }
+
+    [Test]
+    public async Task SearchPlants_WhenSpecieHasInterval_ShouldReturnNextDateBasedOnLastExecution()
+    {
+        var specieId = await this.CreateSpecieAsync();
+        var plantId = await this.CreatePlantAsync("with-interval", specieId);
+        var executedAt = new DateTime(2026, 7, 20, 0, 0, 0, DateTimeKind.Utc);
+
+        _ = await this.client.PostAsJsonAsync($"/api/species/{specieId}/interval/{PlantActionType.Watering}", new UpdateIntervalRequest(TimeSpan.FromDays(7)));
+        _ = await this.client.PostAsJsonAsync($"/api/plants/{plantId}/events", new AddEventRequest(PlantActionType.Watering, executedAt));
+
+        var response = await this.client.GetAsync("/api/plants?searchText=with-interval&from=0&limit=20");
+        var result = await response.Content.ReadFromJsonAsync<PlantDto[]>();
+
+        Assert.That(result![0].NextDates[PlantActionType.Watering], Is.EqualTo(new DateOnly(2026, 7, 27)));
+    }
+
+    [Test]
+    public async Task SearchPlants_WhenPlantHasManyEventsOfSameType_ShouldReturnLatestExecution()
+    {
+        var specieId = await this.CreateSpecieAsync();
+        var plantId = await this.CreatePlantAsync("many-events", specieId);
+        var older = new DateTime(2026, 7, 10, 0, 0, 0, DateTimeKind.Utc);
+        var latest = new DateTime(2026, 7, 20, 0, 0, 0, DateTimeKind.Utc);
+
+        _ = await this.client.PostAsJsonAsync($"/api/plants/{plantId}/events", new AddEventRequest(PlantActionType.Watering, latest));
+        _ = await this.client.PostAsJsonAsync($"/api/plants/{plantId}/events", new AddEventRequest(PlantActionType.Watering, older));
+
+        var response = await this.client.GetAsync("/api/plants?searchText=many-events&from=0&limit=20");
+        var result = await response.Content.ReadFromJsonAsync<PlantDto[]>();
+
+        Assert.That(result![0].LastExecutions[PlantActionType.Watering], Is.EqualTo(latest));
+    }
+
+    [Test]
+    public async Task SearchPlants_WhenActionTypesDiffer_ShouldReturnLastExecutionPerActionType()
+    {
+        var specieId = await this.CreateSpecieAsync();
+        var plantId = await this.CreatePlantAsync("both-types", specieId);
+        var watering = new DateTime(2026, 7, 20, 0, 0, 0, DateTimeKind.Utc);
+        var fertilizing = new DateTime(2026, 7, 15, 0, 0, 0, DateTimeKind.Utc);
+
+        _ = await this.client.PostAsJsonAsync($"/api/plants/{plantId}/events", new AddEventRequest(PlantActionType.Watering, watering));
+        _ = await this.client.PostAsJsonAsync($"/api/plants/{plantId}/events", new AddEventRequest(PlantActionType.Fertilizing, fertilizing));
+
+        var response = await this.client.GetAsync("/api/plants?searchText=both-types&from=0&limit=20");
+        var result = await response.Content.ReadFromJsonAsync<PlantDto[]>();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result![0].LastExecutions[PlantActionType.Watering], Is.EqualTo(watering));
+            Assert.That(result![0].LastExecutions[PlantActionType.Fertilizing], Is.EqualTo(fertilizing));
+        }
+    }
+
+    [Test]
+    public async Task SearchPlants_WhenPlantBelongsToGroups_ShouldReturnPlantGroupIds()
+    {
+        var plantId = await this.CreatePlantAsync("grouped");
+        var regionId = await this.CreatePlantGroupAsync(type: GroupType.Region);
+        var workGroupId = await this.CreatePlantGroupAsync(type: GroupType.WorkGroup);
+
+        _ = await this.client.PostAsync($"/api/plants/{plantId}/groups/{regionId}", null);
+        _ = await this.client.PostAsync($"/api/plants/{plantId}/groups/{workGroupId}", null);
+
+        var response = await this.client.GetAsync("/api/plants?searchText=grouped&from=0&limit=20");
+        var result = await response.Content.ReadFromJsonAsync<PlantDto[]>();
+
+        Assert.That(result![0].PlantGroupIds, Is.EquivalentTo(new[] { regionId, workGroupId }));
+    }
+
+    [Test]
+    public async Task SearchPlants_WhenPlantWasRemovedFromGroup_ShouldNotReturnPlantGroupId()
+    {
+        var plantId = await this.CreatePlantAsync("ungrouped");
+        var groupId = await this.CreatePlantGroupAsync();
+
+        _ = await this.client.PostAsync($"/api/plants/{plantId}/groups/{groupId}", null);
+        _ = await this.client.DeleteAsync($"/api/plants/{plantId}/groups/{groupId}");
+
+        var response = await this.client.GetAsync("/api/plants?searchText=ungrouped&from=0&limit=20");
+        var result = await response.Content.ReadFromJsonAsync<PlantDto[]>();
+
+        Assert.That(result![0].PlantGroupIds, Is.Empty);
     }
 }

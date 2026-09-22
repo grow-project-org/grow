@@ -2,6 +2,7 @@
 using Grow.Domain.Species.Handlers;
 using Grow.Infrastructure.Cqrs;
 using Grow.WebApi.Dtos;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
@@ -17,9 +18,9 @@ public static class SpeciesEndpoints
     {
         var group = app.MapGroup("/api/species").WithTags("Species");
 
-        _ = group.MapGet("/", GetSpecies);
-        _ = group.MapPost("/", CreateSpecie);
-        _ = group.MapPost("/{specieId:guid}/interval/{actionType}", UpdateInterval);
+        _ = group.MapGet("/", GetSpecies).WithName("GetSpecies");
+        _ = group.MapPost("/", CreateSpecie).WithName("CreateSpecie");
+        _ = group.MapPost("/{specieId:guid}/interval/{actionType}", UpdateInterval).WithName("UpdateSpecieInterval");
 
         return app;
     }
@@ -38,15 +39,15 @@ public static class SpeciesEndpoints
         return new(id);
     }
 
-    public static async Task<IResult> UpdateInterval(IDispatcher dispatcher, [FromRoute] Guid specieId, [FromRoute] string actionType, [FromBody] UpdateIntervalRequest request, CancellationToken ct)
+    public static async Task<Results<Ok, NotFound>> UpdateInterval(IDispatcher dispatcher, [FromRoute] Guid specieId, [FromRoute] string actionType, [FromBody] UpdateIntervalRequest request, CancellationToken ct)
     {
         if (!Enum.TryParse<PlantActionType>(actionType, out var plantActionType))
         {
-            return Results.NotFound();
+            return TypedResults.NotFound();
         }
 
         await dispatcher.SendAsync(new UpdateSpecieIntervalCommand(specieId, plantActionType, request.Interval), ct);
 
-        return Results.Ok();
+        return TypedResults.Ok();
     }
 }

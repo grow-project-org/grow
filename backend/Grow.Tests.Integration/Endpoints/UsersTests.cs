@@ -82,12 +82,12 @@ public class UsersTests : IntegrationTestBase
         using var httpsClient = this.CreateHttpsClient();
 
         var response = await httpsClient.GetAsync("/api/users/csrf");
-        var token = await response.Content.ReadAsStringAsync();
+        var result = await response.Content.ReadFromJsonAsync<CsrfTokenResponse>();
 
         using (Assert.EnterMultipleScope())
         {
             Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-            Assert.That(token, Is.Not.Empty);
+            Assert.That(result!.Token, Is.Not.Empty);
         }
     }
 

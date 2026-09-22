@@ -1,18 +1,22 @@
 ﻿using Grow.Domain.Commons;
+using Grow.Domain.Species;
 using Grow.Infrastructure.Cqrs;
 using Microsoft.EntityFrameworkCore;
 
 namespace Grow.Domain.Plants.Handlers;
 
 public record SearchPlantsQuery(string? SearchText, int From, int Limit) : IQuery<SearchPlantsQueryResult>;
-public record SearchPlantsQueryResult(IEnumerable<Plant> Plants);
+public record SearchPlantsQueryResult(IEnumerable<Plant> Plants, IReadOnlyDictionary<Guid, Specie> Species);
 
 public class SearchPlantsQueryHandler(IDatabaseContext databaseContext, IAuthUserSessionProvider userSessionProvider) : IQueryHandler<SearchPlantsQuery, SearchPlantsQueryResult>
 {
     public async Task<SearchPlantsQueryResult> HandleAsync(SearchPlantsQuery query, CancellationToken ct)
     {
         var user = userSessionProvider.Get();
-        var plantsQuery = databaseContext.Plants.Where(x => x.OwnerId == user.Id);
+        var plantsQuery = databaseContext.Plants
+            .Include(x => x.Events)
+            .Include(x => x.PlantGroupMemberships)
+            .Where(x => x.OwnerId == user.Id);
 
         if (!string.IsNullOrWhiteSpace(query.SearchText))
         {
@@ -30,6 +34,11 @@ public class SearchPlantsQueryHandler(IDatabaseContext databaseContext, IAuthUse
 
         var plants = await plantsQuery.ToArrayAsync(ct);
 
-        return new SearchPlantsQueryResult(plants);
+        var specieIdsOfPlants = plants.Select(x => x.SpecieId).Distinct().ToArray();
+        var species = await databaseContext.Species
+            .Where(x => specieIdsOfPlants.Contains(x.Id))
+            .ToDictionaryAsync(x => x.Id, ct);
+
+        return new SearchPlantsQueryResult(plants, species);
     }
 }

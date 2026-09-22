@@ -1,120 +1,97 @@
-# Hodowla roślin — aplikacja React
+# Grow — frontend
 
-Aplikacja mobilna do zarządzania hodowlą roślin oparta o **model instancyjny**:
-każda roślina to konkretny egzemplarz z własnym ID, pojemnikiem, datami i
-historią zabiegów — nie statystyka. Wersja przepisana z prototypu na w pełni
-typowaną aplikację React.
+Aplikacja mobilna do zarządzania hodowlą roślin. Klient `Grow.WebApi` — nie ma
+stanu lokalnego ani trybu offline: serwer jest jedynym źródłem prawdy, a React
+Query jedynym cache'em.
 
 ## Stack
 
-- **React 18** + **TypeScript** (tryb `strict`, bez `any`)
+- **React 18** + **TypeScript** (`strict`, bez `any`)
 - **Vite** — dev server i build
 - **react-router-dom v6** — routing
-- **@tanstack/react-query** — pobieranie danych z API (`useQuery`) i zapis (`useMutation`)
+- **@tanstack/react-query** — pobieranie i zapis danych
+- **openapi-typescript** + **openapi-fetch** — klient API generowany z kontraktu
 - **Formik + Yup** — formularze i walidacja
-- **CSS Modules** + tokeny w `styles/theme.css` — style w plikach `.css`
+- **CSS Modules** + tokeny w `styles/theme.css`
 
 ## Uruchomienie
 
 ```bash
-npm install
-npm run dev        # http://localhost:5173
-npm run build      # produkcyjny build (tsc + vite)
-npm run typecheck  # sama kontrola typów
+yarn install
+yarn dev            # http://localhost:5173
+yarn build          # tsc -b + vite build
+yarn api:generate   # regeneracja typów z ../contracts/openapi.json
 ```
+
+Backend musi działać pod adresem z `VITE_API_URL` (domyślnie
+`https://localhost:7122`). CORS po stronie API dopuszcza `http://localhost:5173`.
+
+## Kontrakt API
+
+`contracts/openapi.json` powstaje przy `dotnet build` projektu `Grow.WebApi`
+(`Microsoft.Extensions.ApiDescription.Server`). Po zmianie endpointów:
+
+```bash
+cd backend && dotnet build Grow.WebApi
+cd ../frontend && yarn api:generate
+```
+
+`src/api/schema.d.ts` jest generowany — nie edytuj go ręcznie.
 
 ## Architektura
 
-Warstwy są rozdzielone zgodnie z zasadami **SOLID** i **DRY** — logika domenowa
-jest czysta (bez Reacta), stan trzyma reduktor za wąskim API, a komponenty są
-„głupie” i renderują gotowe modele widoku.
-
-```
+```text
 src/
-├── api/                      # WARSTWA API
-│   ├── config.ts             #   bazowy URL (celowo nieistniejący) + timeout
-│   ├── http.ts               #   typowany fetch: JSON, AbortController, ApiError
-│   ├── dto.ts                #   format wymiany + mapowanie DTO <-> stan
-│   ├── endpoints.ts          #   gardenApi.fetch / gardenApi.push
-│   └── queryKeys.ts          #   klucze React Query
-├── app/queryClient.ts        # QueryClient + globalna obsługa błędów -> popup
-├── hooks/useGardenSync.ts    # useQuery (load+hydrate) + useMutation (push)
-├── config.ts                 # stałe aplikacji (m.in. TODAY)
-├── types/                    # modele domenowe (Plant, Group, LogEntry, …)
-├── utils/                    # czyste helpery (daty, liczby)
-├── domain/                   # LOGIKA DOMENOWA — czyste funkcje, testowalne
-│   ├── species.ts            #   katalog gatunków, interwały, awatary
-│   ├── schedule.ts           #   terminy zabiegów, „zaległe/dziś/za X dni”
-│   ├── ids.ts                #   generowanie ID i kodów (PAP-05)
-│   └── extraActions.ts       #   akcje dodatkowe (podcinanie, zbiór…)
-├── data/
-│   └── seed.ts               # deterministyczne dane startowe (~72 egz.)
-├── state/                    # STAN — reduktor + Context API
-│   ├── gardenReducer.ts      #   czysty reduktor (transakcje na stanie)
-│   ├── GardenContext.tsx     #   publiczne API (useGarden) — ukrywa dispatch
-│   ├── persistence.ts        #   zapis/odczyt snapshotu w localStorage
-│   ├── notifications.ts      #   store powiadomień o stanie połączenia
-│   └── ToastContext.tsx      #   powiadomienia (useToast)
-├── routes/paths.ts           # jedno źródło prawdy o ścieżkach
-├── components/
-│   ├── ui/                   # prymitywy: Button, Card, Avatar, Pill, ikony…
-│   ├── form/                 # TextField związany z Formik + współdzielony CSS
-│   ├── sheet/                # BottomSheet + gotowe arkusze (rename, akcje)
-│   ├── feedback/Toast.tsx
-│   └── layout/               # PhoneFrame, BottomNav, AppShell, PageHeader
-└── features/                 # EKRANY — każdy z własnym selektorem + CSS
-    ├── today/                #   Dziś
-    ├── plants/               #   Rośliny, Profil, Przesadzanie
-    ├── add/                  #   Dodawanie
-    ├── calendar/             #   Kalendarz
-    └── groups/               #   Grupy
+├── api/
+│   ├── schema.d.ts       # GENEROWANE z OpenAPI
+│   ├── client.ts         # openapi-fetch + cookie, CSRF, timeout, 401, ApiError
+│   ├── resources.ts      # typowane wywołania + stronicowanie
+│   └── queryKeys.ts
+├── app/queryClient.ts    # QueryClient + globalna obsługa błędów -> popup
+├── types/                # modele widoku (Plant, Species, Group)
+├── domain/               # czyste funkcje: mapowanie DTO, harmonogram, kody
+├── state/
+│   ├── AuthContext.tsx   # sesja, bramka logowania, reakcja na 401
+│   ├── GardenContext.tsx # dane z API + mutacje (useGarden)
+│   └── ToastContext.tsx
+├── routes/paths.ts
+├── components/           # ui, form, sheet, feedback, layout
+└── features/             # auth, today, plants, add, calendar, groups
 ```
 
-### API, tryb offline i synchronizacja
+### Dane i synchronizacja
 
-- **Wstępne API** (`src/api`) opisuje kontrakt snapshotowy: `GET /garden`
-  ładuje cały ogród, `PUT /garden` go zapisuje. `API_BASE_URL` wskazuje
-  **celowo nieistniejący host** — każde żądanie kończy się błędem, co ćwiczy
-  ścieżkę offline. Podmień `VITE_API_URL`, gdy backend będzie gotowy.
-- **`useQuery`** ładuje snapshot z serwera i po sukcesie hydratuje reduktor;
-  odświeża się przy odzyskaniu połączenia (`refetchOnReconnect`).
-- **`useMutation`** wypycha lokalne zmiany (debounce 800 ms).
-- **localStorage** — każda zmiana stanu jest natychmiast zapisywana lokalnie,
-  więc aplikacja działa w pełni offline; po starcie wznawia z ostatniego
-  snapshotu, a po odzyskaniu połączenia synchronizuje się z backendem.
-- **Obsługa błędów** — globalne handlery `QueryClient` zamieniają każdy błąd
-  żądania na **pop-up** „Brak połączenia z serwerem” (z akcją „Spróbuj
-  ponownie”); udane żądanie automatycznie chowa pop-up.
+- Każdy ekran czyta z `useGarden()`, które opakowuje trzy zapytania:
+  `/api/species`, `/api/plants`, `/api/plant-groups`. Wszystkie są stronicowane
+  po 100 rekordów aż do wyczerpania — API nie zwraca licznika całości.
+- Mutacja zawsze kończy się unieważnieniem odpowiednich kluczy zapytań.
+- Terminy (`nextDates`) liczy backend; frontend ich nie przelicza.
+- Stan „odhaczone dziś" wynika z `lastExecutions` — nie ma lokalnej flagi.
+- 401 z dowolnego żądania przestawia sesję na anonimową i czyści cache.
 
-### Kluczowe decyzje
+### Logowanie
 
-- **`*.selectors.ts`** — każdy ekran ma czystą funkcję budującą model widoku z
-  surowego stanu. Komponenty nie liczą niczego same (SRP), co upraszcza testy i
-  czytelność.
-- **`useGarden()`** zwraca intencyjne metody (`commitAction`, `repot`,
-  `addPlants`…) zamiast surowego `dispatch` — komponenty zależą od abstrakcji,
-  nie od kształtu reduktora (Dependency Inversion).
-- **Style w plikach.** Wartości tematyczne (kolory, cienie, promienie) żyją jako
-  zmienne CSS w `theme.css`; komponenty używają CSS Modules. Inline pozostają
-  wyłącznie wartości sterowane danymi (kolor awatara egzemplarza, kolor pigułki
-  terminu).
-- **Komponenty i funkcje** pisane jako `const Nazwa = () => {}`.
-- **Routing** deklaratywny; ścieżki scentralizowane w `routes/paths.ts`.
-- **Formularze** (dodawanie, przesadzanie, nowa grupa, zmiana etykiety) oparte o
-  Formik ze schematami Yup.
+Aplikacja wymaga zalogowania. Backend nie weryfikuje jeszcze hasła
+(`SessionStorage` sprawdza tylko `IsUserVerified`), więc formularz zbiera e-mail
+i nazwę użytkownika. Logowanie nieistniejącym adresem kończy się po stronie API
+błędem 500, który traktujemy jako „konto nie istnieje" i zakładamy je
+automatycznie. Brak odpowiedzi serwera (status 0) **nie** powoduje rejestracji —
+inaczej awaria sieci tworzyłaby duplikaty kont.
+
+### Czego nie ma
+
+Poniższe nie mają odpowiednika w API i zostały usunięte, a nie zaślepione:
+przesadzanie i rozmiar doniczki, podcinanie, zbiór, zdarzenia własne, pełna
+historia uprawy, cofanie odhaczenia, wyrównanie harmonogramu grupy, wylogowanie
+oraz dodawanie wielu roślin naraz.
 
 ### Trasy
 
-| Ścieżka                | Ekran                     |
-| ---------------------- | ------------------------- |
-| `/`                    | Dziś                      |
-| `/plants`              | Rośliny (dashboard)       |
-| `/plants/:id`          | Profil egzemplarza        |
-| `/plants/:id/repot`    | Przesadzanie              |
-| `/add`                 | Nowa roślina (bulk-add)   |
-| `/calendar`            | Kalendarz                 |
-| `/groups`              | Grupy                     |
-
-> Data jest przypięta do `TODAY` w `src/config.ts`, aby dane demonstracyjne
-> zawsze pokazywały realistyczny mix zabiegów. Podmień na bieżącą datę do
-> działania „na żywo”.
+| Ścieżka       | Ekran                  |
+| ------------- | ---------------------- |
+| `/`           | Dziś                   |
+| `/plants`     | Rośliny                |
+| `/plants/:id` | Profil egzemplarza     |
+| `/add`        | Nowa roślina           |
+| `/calendar`   | Kalendarz              |
+| `/groups`     | Grupy                  |

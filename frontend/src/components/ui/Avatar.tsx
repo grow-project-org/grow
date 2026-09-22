@@ -2,18 +2,16 @@ import type { CSSProperties } from 'react';
 import styles from './Avatar.module.css';
 
 interface AvatarProps {
-  emoji: string;
-  /** Data-driven background colour (per-plant), applied inline. */
+  label: string;
   bg?: string;
   size?: number;
   radius?: number;
-  /** Emoji font-size; defaults to roughly half the box. */
   fontSize?: number;
   thinBorder?: boolean;
 }
 
 export const Avatar = ({
-  emoji,
+  label,
   bg = 'var(--color-green-tint)',
   size = 44,
   radius = 13,
@@ -29,7 +27,7 @@ export const Avatar = ({
   };
   return (
     <span className={thinBorder ? styles.avatarThin : styles.avatar} style={style}>
-      {emoji}
+      {label}
     </span>
   );
 };

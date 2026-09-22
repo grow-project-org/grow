@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import styles from './PhoneFrame.module.css';
 
 interface PhoneFrameProps {
-  children: ReactNode;
+  children?: ReactNode;
   footer?: ReactNode;
   /** Rendered above the frame, inside the device (toasts, etc). */
   overlay?: ReactNode;

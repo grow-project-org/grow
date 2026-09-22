@@ -152,4 +152,33 @@ public class SearchPlantsQueryHandlerTests
 
         Assert.That(result.Plants, Is.Empty);
     }
+
+    [Test]
+    public async Task HandleAsync_WhenPlantsAreFound_ReturnsSpeciesOfFoundPlantsOnly()
+    {
+        var ownerId = Guid.NewGuid();
+        var specieOneId = Guid.NewGuid();
+        var specieTwoId = Guid.NewGuid();
+
+        var specieOne = Specie.Create(specieOneId, "Bambus Bisseta", ownerId);
+        var specieSecond = Specie.Create(specieTwoId, "Monstera", ownerId);
+
+        var plantOne = Plant.Create(Guid.NewGuid(), "bambus-001", specieOneId, ownerId);
+        var plantSecond = Plant.Create(Guid.NewGuid(), "monstera-001", specieTwoId, ownerId);
+
+        var ctxMock = CreateContextMock([plantOne, plantSecond], [specieOne, specieSecond]);
+
+        var userSessionProviderMock = CreateUserSessionProviderMock(ownerId);
+
+        var handler = new SearchPlantsQueryHandler(ctxMock.Object, userSessionProviderMock.Object);
+        var command = new SearchPlantsQuery("bambus-001", 0, 20);
+
+        var result = await handler.HandleAsync(command, CancellationToken.None);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.Species.Keys, Is.EquivalentTo(new[] { specieOneId }));
+            Assert.That(result.Species[specieOneId], Is.EqualTo(specieOne));
+        }
+    }
 }

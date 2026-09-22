@@ -1,179 +1,185 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useReducer,
-  type ReactNode,
-} from 'react';
-import type { ActionType, GroupType, LogType } from '../types';
-import { gardenReducer, type AddPlantsInput, type GardenState, type LogExtraData } from './gardenReducer';
-import { doneKey } from '../domain/schedule';
-import { buildSeed } from '../data/seed';
-import { loadSnapshot, saveSnapshot } from './persistence';
-import { useBackendSync } from '../hooks/useBackendSync';
+import { createContext, useCallback, useContext, useMemo, type ReactNode } from 'react';
+import { useIsMutating, useQuery, useQueryClient } from '@tanstack/react-query';
+import { plantGroupsApi, plantsApi, speciesApi } from '../api/resources';
+import { plantGroupsKeys, plantsKeys, speciesKeys } from '../api/queryKeys';
+import { toGroup, toPlant, toSpecies } from '../domain/mappers';
+import { ACTION_API_TYPE, ACTION_ROUTE_NAME } from '../domain/actions';
+import { formatIntervalDays } from '../domain/interval';
+import { GROUP_TYPE_TO_API } from '../domain/groups';
+import type { ActionType, Group, GroupType, Plant, Species } from '../types';
+import { today as todayIso } from '../utils/date';
+import { useAuth } from './AuthContext';
 import { useToast } from './ToastContext';
-import type { Plant } from '../types';
 
-/**
- * The public API pages depend on — a small, intention-revealing surface that
- * hides the reducer/dispatch plumbing (Dependency Inversion). Side effects such
- * as toasts are folded into the relevant methods so callers stay declarative.
- */
-export interface GardenApi extends GardenState {
-  plantById: (id: number) => Plant | undefined;
-  /** Mark an action done for a set of plants and optionally show a toast. */
-  commitAction: (ids: number[], type: ActionType, message?: string) => void;
-  /** Toggle a single plant's "done today" state (check / uncheck). */
-  toggleToday: (id: number, type: ActionType) => void;
-  /** Record a one-off event (pruning, harvest, a custom note…) for one or more plants. */
-  logExtra: (ids: number[], type: LogType, message: string, data?: LogExtraData) => void;
-  repot: (id: number, potL: number | null, potCm: number | null, message: string) => void;
-  addPlants: (input: AddPlantsInput) => void;
-  addSpecies: (name: string, emoji: string, w: number | null, f: number | null) => void;
-  toggleGroupMember: (id: number, group: string) => void;
-  addGroup: (name: string, type: GroupType, message: string) => void;
-  dismissWarning: (group: string) => void;
-  /** True while loading from or pushing to the backend. */
+export interface AddPlantInput {
+  specieId: string;
+  code: string;
+  groupIds: string[];
+}
+
+export interface AddSpeciesInput {
+  name: string;
+  w: number | null;
+  f: number | null;
+}
+
+export interface GardenApi {
+  species: Species[];
+  plants: Plant[];
+  groups: Group[];
+  today: string;
+  isLoading: boolean;
   isSyncing: boolean;
+  plantById: (id: string) => Plant | undefined;
+  commitAction: (plantIds: string[], type: ActionType, message?: string) => Promise<void>;
+  addPlant: (input: AddPlantInput) => Promise<void>;
+  addSpecies: (input: AddSpeciesInput) => Promise<void>;
+  addGroup: (name: string, type: GroupType) => Promise<void>;
+  setGroupMembership: (plantId: string, groupId: string, member: boolean) => Promise<void>;
 }
 
 const GardenContext = createContext<GardenApi | null>(null);
 
-/** Seed on first run, otherwise resume from the last local snapshot. */
-const init = (): GardenState =>
-  loadSnapshot() ?? { ...buildSeed(), done: {}, dismissed: {} };
-
 export const GardenProvider = ({ children }: { children: ReactNode }) => {
-  const [state, dispatch] = useReducer(gardenReducer, undefined, init);
+  const { status } = useAuth();
   const { flash } = useToast();
+  const queryClient = useQueryClient();
+  const enabled = status === 'authenticated';
 
-  // Persist every change locally (offline-first).
-  useEffect(() => {
-    saveSnapshot(state);
-  }, [state]);
+  const speciesQuery = useQuery({
+    queryKey: speciesKeys.all,
+    queryFn: () => speciesApi.list(),
+    enabled,
+  });
 
-  // Mirrors creates/events to the backend wherever it has a matching
-  // endpoint; local state above stays authoritative regardless. There is no
-  // `HYDRATE`-from-server path anymore — TODO(backend): no GET endpoint
-  // exists to read plants/groups back, so a second device can't pull this
-  // garden at all yet, only push its own.
-  const { isSyncing } = useBackendSync(state, dispatch);
+  const plantsQuery = useQuery({
+    queryKey: plantsKeys.all,
+    queryFn: () => plantsApi.list(),
+    enabled,
+  });
 
-  const plantById = useCallback(
-    (id: number) => state.garden.find((p) => p.id === id),
-    [state.garden],
+  const groupsQuery = useQuery({
+    queryKey: plantGroupsKeys.all,
+    queryFn: () => plantGroupsApi.list(),
+    enabled,
+  });
+
+  const pendingMutations = useIsMutating();
+
+  const species = useMemo(() => (speciesQuery.data ?? []).map(toSpecies), [speciesQuery.data]);
+  const plants = useMemo(() => (plantsQuery.data ?? []).map(toPlant), [plantsQuery.data]);
+  const groups = useMemo(() => (groupsQuery.data ?? []).map(toGroup), [groupsQuery.data]);
+  const today = useMemo(() => todayIso(), []);
+
+  const invalidate = useCallback(
+    (keys: readonly (readonly string[])[]) =>
+      Promise.all(keys.map((queryKey) => queryClient.invalidateQueries({ queryKey }))),
+    [queryClient],
   );
+
+  const plantById = useCallback((id: string) => plants.find((p) => p.id === id), [plants]);
 
   const commitAction = useCallback(
-    (ids: number[], type: ActionType, message?: string) => {
-      if (!ids.length) return;
-      dispatch({ kind: 'COMMIT_ACTION', ids, type });
+    async (plantIds: string[], type: ActionType, message?: string) => {
+      if (!plantIds.length) return;
+
+      const executedAt = `${today}T00:00:00.000Z`;
+      await Promise.all(
+        plantIds.map((id) => plantsApi.addEvent(id, ACTION_API_TYPE[type], executedAt)),
+      );
+
+      await invalidate([plantsKeys.all]);
       if (message) flash(message);
     },
-    [flash],
+    [today, invalidate, flash],
   );
 
-  const toggleToday = useCallback(
-    // TODO(backend): unchecking (UNDO_TODAY) is local-only — there's no
-    // endpoint to delete/undo a `PlantEvent` already pushed by useBackendSync.
-    (id: number, type: ActionType) => {
-      if (state.done[doneKey(id, type)]) {
-        dispatch({ kind: 'UNDO_TODAY', id, type });
-      } else {
-        dispatch({ kind: 'COMMIT_ACTION', ids: [id], type });
-      }
-    },
-    [state.done],
-  );
+  const addPlant = useCallback(
+    async ({ specieId, code, groupIds }: AddPlantInput) => {
+      const created = await plantsApi.create(code, specieId);
+      await Promise.all(groupIds.map((groupId) => plantsApi.addToGroup(created.createdPlantId, groupId)));
 
-  // TODO(backend): prune/harvest/custom stay local-only — `PlantActionType`
-  // only has Watering/Fertilizing server-side, there's no generic
-  // "log a note against a plant" endpoint.
-  const logExtra = useCallback(
-    (ids: number[], type: LogType, message: string, data?: LogExtraData) => {
-      if (!ids.length) return;
-      dispatch({ kind: 'LOG_EXTRA', ids, type, data });
-      flash(message);
+      await invalidate([plantsKeys.all, plantGroupsKeys.all]);
+      flash(`🌱 Dodano „${code}”`);
     },
-    [flash],
-  );
-
-  // TODO(backend): repotting is local-only — no endpoint updates a plant's
-  // pot size or logs a repot event.
-  const repot = useCallback(
-    (id: number, potL: number | null, potCm: number | null, message: string) => {
-      dispatch({ kind: 'REPOT', id, potL, potCm });
-      flash(message);
-    },
-    [flash],
-  );
-
-  const addPlants = useCallback(
-    (input: AddPlantsInput) => {
-      dispatch({ kind: 'ADD_PLANTS', input });
-      const message =
-        input.qty > 1
-          ? `🌱 Dodano ${input.qty} szt. „${input.species}”`
-          : `🌱 Dodano „${input.species}”`;
-      flash(message);
-    },
-    [flash],
+    [invalidate, flash],
   );
 
   const addSpecies = useCallback(
-    (name: string, emoji: string, w: number | null, f: number | null) => {
-      dispatch({ kind: 'ADD_SPECIES', name, emoji, w, f });
+    async ({ name, w, f }: AddSpeciesInput) => {
+      const created = await speciesApi.create(name);
+
+      if (w != null) {
+        await speciesApi.updateInterval(created.specieId, ACTION_ROUTE_NAME.water, formatIntervalDays(w));
+      }
+      if (f != null) {
+        await speciesApi.updateInterval(created.specieId, ACTION_ROUTE_NAME.fert, formatIntervalDays(f));
+      }
+
+      await invalidate([speciesKeys.all]);
       flash(`🌱 Dodano gatunek „${name}”`);
     },
-    [flash],
+    [invalidate, flash],
   );
-
-  const toggleGroupMember = useCallback((id: number, group: string) => {
-    dispatch({ kind: 'TOGGLE_GROUP_MEMBER', id, group });
-  }, []);
 
   const addGroup = useCallback(
-    (name: string, type: GroupType, message: string) => {
-      dispatch({ kind: 'ADD_GROUP', name, type });
-      flash(message);
+    async (name: string, type: GroupType) => {
+      await plantGroupsApi.create(name, GROUP_TYPE_TO_API[type]);
+
+      await invalidate([plantGroupsKeys.all]);
+      flash(`➕ Dodano „${name}”`);
     },
-    [flash],
+    [invalidate, flash],
   );
 
-  const dismissWarning = useCallback((group: string) => {
-    dispatch({ kind: 'DISMISS_WARNING', group });
-  }, []);
+  const setGroupMembership = useCallback(
+    async (plantId: string, groupId: string, member: boolean) => {
+      await (member
+        ? plantsApi.addToGroup(plantId, groupId)
+        : plantsApi.removeFromGroup(plantId, groupId));
+
+      await invalidate([plantsKeys.all, plantGroupsKeys.all]);
+    },
+    [invalidate],
+  );
 
   const value = useMemo<GardenApi>(
     () => ({
-      ...state,
+      species,
+      plants,
+      groups,
+      today,
+      isLoading: speciesQuery.isLoading || plantsQuery.isLoading || groupsQuery.isLoading,
+      isSyncing:
+        pendingMutations > 0 ||
+        speciesQuery.isFetching ||
+        plantsQuery.isFetching ||
+        groupsQuery.isFetching,
       plantById,
       commitAction,
-      toggleToday,
-      logExtra,
-      repot,
-      addPlants,
+      addPlant,
       addSpecies,
-      toggleGroupMember,
       addGroup,
-      dismissWarning,
-      isSyncing,
+      setGroupMembership,
     }),
     [
-      state,
+      species,
+      plants,
+      groups,
+      today,
+      speciesQuery.isLoading,
+      speciesQuery.isFetching,
+      plantsQuery.isLoading,
+      plantsQuery.isFetching,
+      groupsQuery.isLoading,
+      groupsQuery.isFetching,
+      pendingMutations,
       plantById,
       commitAction,
-      toggleToday,
-      logExtra,
-      repot,
-      addPlants,
+      addPlant,
       addSpecies,
-      toggleGroupMember,
       addGroup,
-      dismissWarning,
-      isSyncing,
+      setGroupMembership,
     ],
   );
 

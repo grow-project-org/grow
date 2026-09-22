@@ -1,12 +1,16 @@
-import type { Group, Plant, Species } from '../../types';
-import { TODAY } from '../../config';
-import { diffDays, fmtLong, weekdayMondayFirst } from '../../utils/date';
-import { dueDate, relLabel } from '../../domain/schedule';
+import type { ActionType, Group, Plant, Species } from '../../types';
+import {
+  MONTHS_NOMINATIVE,
+  diffDays,
+  fmtLong,
+  parseUTC,
+  toISO,
+  weekdayMondayFirst,
+} from '../../utils/date';
+import { ACTION_META, ACTION_TYPES } from '../../domain/actions';
+import { nextDate, relLabel } from '../../domain/schedule';
+import { speciesName } from '../../domain/species';
 import { regionLabel } from '../../domain/regions';
-
-const YEAR = 2026;
-const MONTH_INDEX = 6; // July (0-based)
-const MONTH_PREFIX = '2026-07';
 
 export interface CalCell {
   day: number;
@@ -16,9 +20,9 @@ export interface CalCell {
 }
 
 export interface CalEvent {
-  id: number;
+  id: string;
   name: string;
-  emoji: string;
+  initial: string;
   loc: string;
   action: string;
   bg: string;
@@ -26,7 +30,8 @@ export interface CalEvent {
 
 export interface CalendarView {
   title: string;
-  /** Leading empty slots before day 1 (Monday-first). */
+  prevMonth: string;
+  nextMonth: string;
   leadingBlanks: number;
   cells: CalCell[];
   selectedTitle: string;
@@ -34,54 +39,77 @@ export interface CalendarView {
   empty: boolean;
 }
 
-type DayEvents = Map<string, Array<{ plant: Plant; type: 'water' | 'fert' }>>;
+const EVENT_BG: Record<ActionType, string> = {
+  water: 'var(--color-water-bg)',
+  fert: 'var(--color-fert-bg)',
+};
 
-const buildEventMap = (species: readonly Species[], garden: readonly Plant[]): DayEvents => {
+type DayEvents = Map<string, Array<{ plant: Plant; type: ActionType }>>;
+
+const buildEventMap = (plants: readonly Plant[], monthPrefix: string, today: string): DayEvents => {
   const map: DayEvents = new Map();
-  for (const plant of garden) {
-    for (const type of ['water', 'fert'] as const) {
-      let due = dueDate(species, plant, type);
+
+  for (const plant of plants) {
+    for (const type of ACTION_TYPES) {
+      let due = nextDate(plant, type);
       if (!due) continue;
-      if (diffDays(due, TODAY) < 0) due = TODAY; // roll overdue onto today
-      if (due.slice(0, 7) !== MONTH_PREFIX) continue;
+      if (diffDays(due, today) < 0) due = today;
+      if (due.slice(0, 7) !== monthPrefix) continue;
+
       const list = map.get(due) ?? [];
       list.push({ plant, type });
       map.set(due, list);
     }
   }
+
   return map;
+};
+
+const shiftMonth = (iso: string, delta: number): string => {
+  const date = parseUTC(iso);
+  return toISO(new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + delta, 1)));
 };
 
 export const selectCalendar = (
   species: readonly Species[],
   groups: readonly Group[],
-  garden: readonly Plant[],
+  plants: readonly Plant[],
   selected: string,
+  today: string,
 ): CalendarView => {
-  const events = buildEventMap(species, garden);
-  const firstOfMonth = new Date(Date.UTC(YEAR, MONTH_INDEX, 1));
-  const daysInMonth = new Date(Date.UTC(YEAR, MONTH_INDEX + 1, 0)).getUTCDate();
+  const monthPrefix = selected.slice(0, 7);
+  const events = buildEventMap(plants, monthPrefix, today);
+
+  const anchor = parseUTC(selected);
+  const year = anchor.getUTCFullYear();
+  const month = anchor.getUTCMonth();
+  const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
 
   const cells: CalCell[] = [];
   for (let day = 1; day <= daysInMonth; day++) {
-    const iso = `${MONTH_PREFIX}-${String(day).padStart(2, '0')}`;
-    cells.push({ day, iso, hasEvents: events.has(iso), isToday: iso === TODAY });
+    const iso = `${monthPrefix}-${String(day).padStart(2, '0')}`;
+    cells.push({ day, iso, hasEvents: events.has(iso), isToday: iso === today });
   }
 
-  const selectedEvents: CalEvent[] = (events.get(selected) ?? []).map(({ plant, type }) => ({
-    id: plant.id,
-    name: plant.species ?? 'Roślina',
-    emoji: plant.emoji,
-    loc: regionLabel(plant, groups),
-    action: type === 'water' ? 'Podlewanie' : 'Nawożenie',
-    bg: type === 'water' ? 'var(--color-water-bg)' : 'var(--color-fert-bg)',
-  }));
+  const selectedEvents: CalEvent[] = (events.get(selected) ?? []).map(({ plant, type }) => {
+    const name = speciesName(species, plant.specieId);
+    return {
+      id: plant.id,
+      name,
+      initial: name.slice(0, 1).toUpperCase(),
+      loc: regionLabel(plant, groups),
+      action: ACTION_META[type].label,
+      bg: EVENT_BG[type],
+    };
+  });
 
   return {
-    title: 'Lipiec 2026',
-    leadingBlanks: weekdayMondayFirst(firstOfMonth),
+    title: `${MONTHS_NOMINATIVE[month]} ${year}`,
+    prevMonth: shiftMonth(selected, -1),
+    nextMonth: shiftMonth(selected, 1),
+    leadingBlanks: weekdayMondayFirst(new Date(Date.UTC(year, month, 1))),
     cells,
-    selectedTitle: `${fmtLong(selected)} · ${relLabel(selected).text}`,
+    selectedTitle: `${fmtLong(selected)} · ${relLabel(selected, today).text}`,
     events: selectedEvents,
     empty: selectedEvents.length === 0,
   };
