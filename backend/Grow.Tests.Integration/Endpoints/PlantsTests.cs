@@ -1,5 +1,6 @@
 using Grow.Domain.Commons;
 using Grow.Domain.Commons.Ownership;
+using Grow.WebApi.Dtos;
 using Grow.WebApi.Endpoints;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
@@ -152,5 +153,99 @@ public class PlantsTests : IntegrationTestBase
             var addEventRequest = new AddEventRequest(PlantActionType.Watering, DateTime.UtcNow);
             _ = await this.client.PostAsJsonAsync($"/api/plants/{otherUsersPlant!.CreatedPlantId}/events", addEventRequest);
         });
+    }
+
+    [Test]
+    public async Task SearchPlants_ByCustomId_ShouldReturnMatchingPlants()
+    {
+        var specieId = await this.CreateSpecieAsync();
+
+        var matchingOnePlant = new CreatePlantRequest("monstera", specieId);
+        var matchingTwoPlant = new CreatePlantRequest("bambus", specieId);
+
+        _ = await this.client.PostAsJsonAsync("/api/plants", matchingOnePlant);
+        _ = await this.client.PostAsJsonAsync("/api/plants", matchingTwoPlant);
+
+        var response = await this.client.GetAsync("/api/plants?searchText=monstera&from=0&limit=20");
+        var result = await response.Content.ReadFromJsonAsync<PlantDto[]>();
+
+        using(Assert.EnterMultipleScope())
+        {
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result, Has.Length.EqualTo(1));
+            Assert.That(result![0].CustomId, Is.EqualTo("monstera"));
+        }
+    }
+
+    [Test]
+    public async Task SearchPlants_BySpecieName_ShouldReturnMatchingPlants()
+    {
+        var specieId = await this.CreateSpecieAsync("Bambus");
+
+        var request = new CreatePlantRequest("my-bambus", specieId);
+        var createResponse = await this.client.PostAsJsonAsync("/api/plants", request);
+        var createdPlant = await createResponse.Content.ReadFromJsonAsync<CreatePlantResponse>();
+
+        var response = await this.client.GetAsync("/api/plants?searchText=Bambus&from=0&limit=20");
+        var result = await response.Content.ReadFromJsonAsync<PlantDto[]>();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result, Has.Length.EqualTo(1));
+            Assert.That(result![0].Id, Is.EqualTo(createdPlant!.CreatedPlantId));
+        }
+    }
+
+    [Test]
+    public async Task SearchPlants_WithoutSearchText_ShouldReturnAllUserPlants()
+    {
+        var specieId = await this.CreateSpecieAsync("Bambus");
+
+        var oneRequest = new CreatePlantRequest("my-bambus", specieId);
+        var twoRequest = new CreatePlantRequest("my-bambus-2", specieId);
+ 
+        var createOneResponse = await this.client.PostAsJsonAsync("/api/plants", oneRequest);
+        var createTwoResponse = await this.client.PostAsJsonAsync("/api/plants", twoRequest);
+
+        var onePlant = await createOneResponse.Content.ReadFromJsonAsync<CreatePlantResponse>();
+        var twoPlant = await createTwoResponse.Content.ReadFromJsonAsync<CreatePlantResponse>();
+
+        var response = await this.client.GetAsync("/api/plants?from=0&limit=20");
+        var result = await response.Content.ReadFromJsonAsync<PlantDto[]>();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result, Has.Length.EqualTo(2));
+            Assert.That(result!.Select(x => x.Id), Does.Contain(onePlant!.CreatedPlantId));
+            Assert.That(result!.Select(x => x.Id), Does.Contain(twoPlant!.CreatedPlantId));
+        }
+    }
+
+    [Test]
+    public async Task SearchPlants_ShouldNotReturnPlantsOwnedByAnotherUser()
+    {
+        var (client, _) = await this.CreateOtherUserClientAsync();
+
+        var specieResponse = await client.PostAsJsonAsync("/api/species", new CreateSpecieRequest("Bambus One"));
+        var specie = await specieResponse.Content.ReadFromJsonAsync<CreateSpecieResponse>();
+
+        var plantResponse = await client.PostAsJsonAsync("/api/plants", new CreatePlantRequest("bambus-one", specie!.SpecieId));
+
+        Assert.That(plantResponse.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+
+        var response = await this.client.GetAsync("/api/plants?searchText=bambus-one&from=0&limit=20");
+        var result = await response.Content.ReadFromJsonAsync<PlantDto[]>();
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result, Is.Empty);
+        }
     }
 }
