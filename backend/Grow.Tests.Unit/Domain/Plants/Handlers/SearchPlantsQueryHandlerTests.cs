@@ -40,7 +40,7 @@ public class SearchPlantsQueryHandlerTests
         var userSessionProviderMock = CreateUserSessionProviderMock(ownerId);
 
         var handler = new SearchPlantsQueryHandler(ctxMock.Object, userSessionProviderMock.Object);
-        var command = new SearchPlantsQuery("monstera");
+        var command = new SearchPlantsQuery("monstera", 0, 20);
 
         var result = await handler.HandleAsync(command, CancellationToken.None);
 

@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Grow.Domain.Plants.Handlers;
 
-public record SearchPlantsQuery(string? SearchText) : IQuery<SearchPlantsQueryResult>;
+public record SearchPlantsQuery(string? SearchText, int From, int Limit) : IQuery<SearchPlantsQueryResult>;
 public record SearchPlantsQueryResult(IEnumerable<Plant> Plants);
 
 public class SearchPlantsQueryHandler(IDatabaseContext databaseContext, IAuthUserSessionProvider userSessionProvider) : IQueryHandler<SearchPlantsQuery, SearchPlantsQueryResult>
@@ -20,6 +20,8 @@ public class SearchPlantsQueryHandler(IDatabaseContext databaseContext, IAuthUse
                 x.CustomId.Contains(query.SearchText) ||
                 databaseContext.Species.Any(specie => specie.Id == x.SpecieId && specie.Name.Contains(query.SearchText)));
         }
+
+        plantsQuery = plantsQuery.Skip(query.From).Take(query.Limit);
 
         var plants = await plantsQuery.ToArrayAsync(ct);
 
