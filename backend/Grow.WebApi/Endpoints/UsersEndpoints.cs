@@ -19,21 +19,23 @@ public record CreateUserResponse(Guid Id);
 
 public record MeResponse(string Username);
 
+public record CsrfTokenResponse(string Token);
+
 public static class UsersEndpoints
 {
     public static IEndpointRouteBuilder MapUsersEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/users").WithTags("Users");
 
-        _ = group.MapPost("/register", Register);
-        _ = group.MapPost("/login", Login);
-        _ = group.MapPost("/me", GetMe);
+        _ = group.MapPost("/register", Register).WithName("Register");
+        _ = group.MapPost("/login", Login).WithName("Login");
+        _ = group.MapPost("/me", GetMe).WithName("GetMe");
 
         _ = group.MapGet("/csrf", (IAntiforgery forgery, HttpContext ctx) =>
         {
             var tokens = forgery.GetAndStoreTokens(ctx);
-            return tokens.RequestToken;
-        }).AllowAnonymous();
+            return new CsrfTokenResponse(tokens.RequestToken!);
+        }).WithName("GetCsrfToken").AllowAnonymous();
 
         return app;
     }

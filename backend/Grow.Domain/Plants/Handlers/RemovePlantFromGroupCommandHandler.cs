@@ -14,6 +14,7 @@ public class RemovePlantFromGroupCommandHandler(IDatabaseContext context, IAuthU
         var user = userSessionProvider.Get();
 
         var plantGroup = await context.PlantGroups
+            .Include(x => x.PlantGroupMemberships)
             .FirstAsync(x => x.Id == command.PlantGroupId, ct);
         plantGroup.ThrowIfNotOwner(user);
 

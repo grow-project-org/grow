@@ -5,15 +5,16 @@ import styles from './CheckToggle.module.css';
 interface CheckToggleProps {
   checked: boolean;
   onClick: () => void;
+  disabled?: boolean;
   size?: number;
   radius?: number;
   label?: string;
 }
 
-/** Square checkbox that fills green with a tick when checked. */
 export const CheckToggle = ({
   checked,
   onClick,
+  disabled = false,
   size = 38,
   radius = 12,
   label = 'Odhacz',
@@ -25,6 +26,7 @@ export const CheckToggle = ({
       className={styles.toggle}
       style={style}
       onClick={onClick}
+      disabled={disabled}
       aria-pressed={checked}
       aria-label={label}
     >

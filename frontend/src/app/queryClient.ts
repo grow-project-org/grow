@@ -1,23 +1,24 @@
 import { QueryCache, QueryClient, MutationCache } from '@tanstack/react-query';
-import { ApiError } from '../api/http';
+import { ApiError } from '../api/client';
 import { clearNotices, notifyServerError } from '../state/notifications';
 
 const describe = (error: unknown): string =>
   error instanceof ApiError ? error.userMessage : 'Nie udało się połączyć z serwerem.';
 
-/**
- * A single QueryClient with global handlers: any query/mutation failure raises
- * a connection popup, and any success clears it (connection restored).
- * `networkMode: 'always'` makes requests actually fire against the (dead) API
- * so the offline path is exercised rather than paused.
- */
+const isExpected = (error: unknown): boolean =>
+  error instanceof ApiError && error.status === 401;
+
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
-    onError: (error) => notifyServerError(describe(error)),
+    onError: (error) => {
+      if (!isExpected(error)) notifyServerError(describe(error));
+    },
     onSuccess: () => clearNotices(),
   }),
   mutationCache: new MutationCache({
-    onError: (error) => notifyServerError(describe(error)),
+    onError: (error) => {
+      if (!isExpected(error)) notifyServerError(describe(error));
+    },
     onSuccess: () => clearNotices(),
   }),
   defaultOptions: {
@@ -29,7 +30,7 @@ export const queryClient = new QueryClient({
       networkMode: 'always',
     },
     mutations: {
-      retry: 2,
+      retry: 0,
       networkMode: 'always',
     },
   },

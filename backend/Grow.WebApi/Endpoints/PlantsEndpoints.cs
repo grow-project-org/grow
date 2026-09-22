@@ -1,4 +1,4 @@
-using Grow.Domain.Commons;
+﻿using Grow.Domain.Commons;
 using Grow.Domain.Plants;
 using Grow.Domain.Plants.Handlers;
 using Grow.Infrastructure.Cqrs;
@@ -24,15 +24,16 @@ public static class PlantsEndpoints
     {
         var group = app.MapGroup("/api/plants").WithTags("Plants");
 
-        _ = group.MapPost("/", CreatePlant);
-        _ = group.MapPost("/{plantId:guid}/events", AddEvent);
-        _ = group.MapPost("/{plantId:guid}/groups/{plantGroupId:guid}", AddToGroup);
-        _ = group.MapDelete("/{plantId:guid}/groups/{plantGroupId:guid}", RemoveFromGroup);
-        _ = group.MapGet("/", SearchPlants);
+        _ = group.MapPost("/", CreatePlant).WithName("CreatePlant");
+        _ = group.MapPost("/{plantId:guid}/events", AddEvent).WithName("AddPlantEvent");
+        _ = group.MapPost("/{plantId:guid}/groups/{plantGroupId:guid}", AddToGroup).WithName("AddPlantToGroup");
+        _ = group.MapDelete("/{plantId:guid}/groups/{plantGroupId:guid}", RemoveFromGroup).WithName("RemovePlantFromGroup");
+        _ = group.MapGet("/", SearchPlants).WithName("SearchPlants");
 
         var plantGroup = app.MapGroup("/api/plant-groups").WithTags("Plant Groups");
 
-        _ = plantGroup.MapPost("/", CreateGroup);
+        _ = plantGroup.MapPost("/", CreateGroup).WithName("CreatePlantGroup");
+        _ = plantGroup.MapGet("/", GetPlantGroups).WithName("GetPlantGroups");
 
         return app;
     }
@@ -41,7 +42,14 @@ public static class PlantsEndpoints
         IDispatcher dispatcher, [FromQuery] string? searchText, [FromQuery] int from, [FromQuery] [Range(1, 100)] int limit, CancellationToken ct = default)
     {
         var plants = await dispatcher.QueryAsync<SearchPlantsQuery, SearchPlantsQueryResult>(new SearchPlantsQuery(searchText, from, limit), ct);
-        return plants.Plants.Select(PlantDto.From);
+        return plants.Plants.Select(x => PlantDto.From(x, plants.Species[x.SpecieId]));
+    }
+
+    public static async Task<IEnumerable<PlantGroupDto>> GetPlantGroups(
+        IDispatcher dispatcher, [FromQuery] int from, [FromQuery] [Range(1, 100)] int limit, [FromQuery] string? searchName = null, CancellationToken ct = default)
+    {
+        var plantGroups = await dispatcher.QueryAsync<GetPlantGroupsQuery, GetPlantGroupsQueryResult>(new GetPlantGroupsQuery(from, limit, searchName), ct);
+        return plantGroups.PlantGroups.Select(PlantGroupDto.From);
     }
 
     public static async Task<CreatePlantGroupResponse> CreateGroup(IDispatcher dispatcher, [FromBody] CreatePlantGroupRequest request, CancellationToken ct)

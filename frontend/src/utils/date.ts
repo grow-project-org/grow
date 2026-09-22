@@ -18,6 +18,21 @@ export const MONTHS = [
   'grudnia',
 ] as const;
 
+export const MONTHS_NOMINATIVE = [
+  'Styczeń',
+  'Luty',
+  'Marzec',
+  'Kwiecień',
+  'Maj',
+  'Czerwiec',
+  'Lipiec',
+  'Sierpień',
+  'Wrzesień',
+  'Październik',
+  'Listopad',
+  'Grudzień',
+] as const;
+
 /** Weekday labels, Monday-first. */
 export const DOW = ['Pon', 'Wt', 'Śr', 'Czw', 'Pt', 'Sob', 'Nd'] as const;
 
@@ -35,6 +50,12 @@ export const WEEKDAYS_LONG = [
 /** Capitalised full weekday name for an ISO date. */
 export const weekdayLong = (iso: string): string =>
   WEEKDAYS_LONG[parseUTC(iso).getUTCDay()];
+
+/** Today as an ISO `yyyy-mm-dd` string in UTC. */
+export const today = (): string => toISO(new Date());
+
+/** Date part of a server timestamp (`2026-07-20T00:00:00Z` -> `2026-07-20`). */
+export const dateOf = (timestamp: string): string => timestamp.slice(0, 10);
 
 export const parseUTC = (iso: string): Date => {
   const [y, m, d] = iso.split('-').map(Number);

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGarden } from '../../state/GardenContext';
-import { TODAY } from '../../config';
 import { DOW } from '../../utils/date';
 import { Avatar } from '../../components/ui/Avatar';
 import { plantPath } from '../../routes/paths';
@@ -9,17 +8,25 @@ import { selectCalendar } from './calendar.selectors';
 import styles from './CalendarPage.module.css';
 
 export const CalendarPage = () => {
-  const { species, groups, garden } = useGarden();
+  const { species, groups, plants, today } = useGarden();
   const navigate = useNavigate();
-  const [selected, setSelected] = useState(TODAY);
-  const view = selectCalendar(species, groups, garden, selected);
+  const [selected, setSelected] = useState(today);
+  const view = selectCalendar(species, groups, plants, selected, today);
 
   return (
     <div className={styles.page}>
       <h1 className={styles.heading}>Kalendarz</h1>
 
       <div className={styles.calendar}>
-        <div className={styles.monthTitle}>{view.title}</div>
+        <div className={styles.monthBar}>
+          <button type="button" className={styles.monthNav} onClick={() => setSelected(view.prevMonth)} aria-label="Poprzedni miesiąc">
+            ‹
+          </button>
+          <div className={styles.monthTitle}>{view.title}</div>
+          <button type="button" className={styles.monthNav} onClick={() => setSelected(view.nextMonth)} aria-label="Następny miesiąc">
+            ›
+          </button>
+        </div>
 
         <div className={styles.dow}>
           {DOW.map((d) => (
@@ -64,7 +71,7 @@ export const CalendarPage = () => {
             className={styles.event}
             onClick={() => navigate(plantPath(event.id))}
           >
-            <Avatar emoji={event.emoji} bg={event.bg} size={40} radius={12} fontSize={19} thinBorder />
+            <Avatar label={event.initial} bg={event.bg} size={40} radius={12} fontSize={17} thinBorder />
             <span className={styles.eventText}>
               <span className={styles.eventName}>{event.name}</span>
               <span className={styles.eventMeta}>

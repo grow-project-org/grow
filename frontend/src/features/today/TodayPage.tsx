@@ -1,23 +1,27 @@
 import { useNavigate } from 'react-router-dom';
 import { useGarden } from '../../state/GardenContext';
-import { TODAY } from '../../config';
 import { fmtLong, weekdayLong } from '../../utils/date';
 import { Avatar } from '../../components/ui/Avatar';
 import { CheckToggle } from '../../components/ui/CheckToggle';
+import { ACTION_META } from '../../domain/actions';
 import { plantPath } from '../../routes/paths';
 import { selectToday, type TodayRow } from './today.selectors';
+import type { ActionType } from '../../types';
 import styles from './TodayPage.module.css';
 
 export const TodayPage = () => {
-  const { species, groups, garden, done, toggleToday } = useGarden();
+  const { species, groups, plants, today, isLoading, commitAction } = useGarden();
   const navigate = useNavigate();
-  const { summary, sections, left, allDone } = selectToday(species, groups, garden, done);
+  const { summary, sections, left, allDone } = selectToday(species, groups, plants, today);
+
+  const check = (id: string, type: ActionType) =>
+    void commitAction([id], type, `${ACTION_META[type].doneLabel} 1 roślinę`);
 
   return (
     <div className={styles.page}>
       <header className={styles.head}>
         <div>
-          <p className={styles.date}>{`${weekdayLong(TODAY)}, ${fmtLong(TODAY)}`}</p>
+          <p className={styles.date}>{`${weekdayLong(today)}, ${fmtLong(today)}`}</p>
           <h1 className={styles.greeting}>Dzień dobry 🌱</h1>
         </div>
         <div className={styles.counter}>
@@ -41,11 +45,17 @@ export const TodayPage = () => {
         </div>
       </div>
 
-      {allDone && (
+      {isLoading && <p className={styles.state}>Wczytywanie ogrodu…</p>}
+
+      {!isLoading && allDone && !sections.length && (
         <div className={styles.allDone}>
           <div className={styles.confetti}>🎉</div>
-          <p className={styles.allDoneTitle}>Wszystko zrobione!</p>
-          <p className={styles.allDoneSub}>Rośliny zadowolone. Do zobaczenia jutro.</p>
+          <p className={styles.allDoneTitle}>Nic na dziś!</p>
+          <p className={styles.allDoneSub}>
+            {plants.length
+              ? 'Rośliny zadowolone. Do zobaczenia jutro.'
+              : 'Dodaj pierwszą roślinę, żeby zobaczyć tu harmonogram.'}
+          </p>
         </div>
       )}
 
@@ -62,7 +72,7 @@ export const TodayPage = () => {
                 key={row.id}
                 row={row}
                 onOpen={() => navigate(plantPath(row.id))}
-                onToggle={() => toggleToday(row.id, section.type)}
+                onCheck={() => check(row.id, section.type)}
               />
             ))}
           </ul>
@@ -75,13 +85,13 @@ export const TodayPage = () => {
 interface TaskRowProps {
   row: TodayRow;
   onOpen: () => void;
-  onToggle: () => void;
+  onCheck: () => void;
 }
 
-const TaskRow = ({ row, onOpen, onToggle }: TaskRowProps) => (
+const TaskRow = ({ row, onOpen, onCheck }: TaskRowProps) => (
   <li className={styles.row}>
     <button type="button" className={styles.rowMain} onClick={onOpen}>
-      <Avatar emoji={row.emoji} bg={row.avatarBg} size={44} radius={13} />
+      <Avatar label={row.initial} bg={row.avatarBg} size={44} radius={13} />
       <span className={styles.rowText}>
         <span className={styles.rowTitleLine}>
           <span className={row.done ? styles.doneText : undefined}>{row.name}</span>
@@ -90,6 +100,6 @@ const TaskRow = ({ row, onOpen, onToggle }: TaskRowProps) => (
         <span className={styles.rowSub}>{row.sub}</span>
       </span>
     </button>
-    <CheckToggle checked={row.done} onClick={onToggle} />
+    <CheckToggle checked={row.done} disabled={row.done} onClick={onCheck} />
   </li>
 );

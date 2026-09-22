@@ -1,19 +1,14 @@
 import type { ActionType, Group, Plant, Species } from '../../types';
-import { TODAY } from '../../config';
 import { diffDays } from '../../utils/date';
-import { avatarBg } from '../../domain/species';
+import { ACTION_META, ACTION_TYPES } from '../../domain/actions';
+import { avatarBg, speciesName } from '../../domain/species';
 import { regionLabel } from '../../domain/regions';
-import {
-  dueDate,
-  isDoneToday,
-  relLabel,
-  type DoneMap,
-} from '../../domain/schedule';
+import { isDoneToday, isDue, nextDate, relLabel } from '../../domain/schedule';
 
 export interface TodayRow {
-  id: number;
+  id: string;
   name: string;
-  emoji: string;
+  initial: string;
   avatarBg: string;
   sub: string;
   done: boolean;
@@ -40,60 +35,54 @@ export interface TodayView {
   allDone: boolean;
 }
 
-const SECTION_META: Record<ActionType, { emoji: string; title: string }> = {
-  water: { emoji: '💧', title: 'Podlewanie' },
-  fert: { emoji: '🌱', title: 'Nawożenie' },
-};
-
 const buildRows = (
   species: readonly Species[],
   groups: readonly Group[],
-  garden: readonly Plant[],
-  done: DoneMap,
+  plants: readonly Plant[],
   type: ActionType,
+  today: string,
 ): TodayRow[] =>
-  garden
-    .filter((p) => {
-      const due = dueDate(species, p, type);
-      return due != null && diffDays(due, TODAY) <= 0;
-    })
+  plants
+    .filter((p) => isDue(p, type, today) || isDoneToday(p, type, today))
     .map((p) => {
-      const due = dueDate(species, p, type) as string;
-      const isDone = isDoneToday(done, p.id, type);
-      const overdue = diffDays(due, TODAY) < 0;
-      const parts = [p.code, regionLabel(p, groups)].filter(Boolean).join(' · ');
-      const sub = overdue ? `${parts} · ${relLabel(due).text}` : parts;
+      const name = speciesName(species, p.specieId);
+      const done = isDoneToday(p, type, today);
+      const next = nextDate(p, type);
+      const overdue = !done && next != null && diffDays(next, today) < 0;
+      const parts = [p.code, regionLabel(p, groups)].filter((part) => part !== '—').join(' · ');
+
       return {
         id: p.id,
-        name: p.species ?? 'Roślina',
-        emoji: p.emoji,
+        name,
+        initial: name.slice(0, 1).toUpperCase(),
         avatarBg: avatarBg(p.id),
-        sub,
-        done: isDone,
-        overdue: overdue && !isDone,
+        sub: overdue && next ? `${parts} · ${relLabel(next, today).text}` : parts,
+        done,
+        overdue,
       };
     });
 
-/** Build the "Dziś" screen model: due sections and the outstanding count. */
 export const selectToday = (
   species: readonly Species[],
   groups: readonly Group[],
-  garden: readonly Plant[],
-  done: DoneMap,
+  plants: readonly Plant[],
+  today: string,
 ): TodayView => {
   const sections: TodaySection[] = [];
   const summary: TodaySummary = { water: 0, fert: 0, overdue: 0 };
   let left = 0;
 
-  (['water', 'fert'] as const).forEach((type) => {
-    const rows = buildRows(species, groups, garden, done, type);
-    if (!rows.length) return;
-    sections.push({ type, ...SECTION_META[type], rows });
+  for (const type of ACTION_TYPES) {
+    const rows = buildRows(species, groups, plants, type, today);
+    if (!rows.length) continue;
+
+    sections.push({ type, emoji: ACTION_META[type].emoji, title: ACTION_META[type].label, rows });
+
     const undone = rows.filter((r) => !r.done).length;
     left += undone;
     summary[type] = undone;
     summary.overdue += rows.filter((r) => r.overdue).length;
-  });
+  }
 
   return { summary, sections, left, allDone: left === 0 };
 };

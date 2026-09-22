@@ -1,48 +1,21 @@
-import type { ActionType, Plant, Species } from '../types';
-import { TODAY } from '../config';
-import { daysAdd, diffDays } from '../utils/date';
-import { interval } from './species';
+import type { ActionType, Plant } from '../types';
+import { diffDays } from '../utils/date';
 
-/**
- * Scheduling logic — pure functions over the species catalogue + a plant.
- * No React, no state: safe to unit-test and reuse anywhere.
- */
+export const nextDate = (plant: Plant, type: ActionType): string | null =>
+  type === 'water' ? plant.nextWater : plant.nextFert;
 
-export type DoneMap = Record<string, boolean>;
+export const lastDate = (plant: Plant, type: ActionType): string | null =>
+  type === 'water' ? plant.lastWater : plant.lastFert;
 
-export const doneKey = (id: number, type: ActionType): string => `${id}:${type}`;
+export const isTracked = (plant: Plant, type: ActionType): boolean =>
+  nextDate(plant, type) != null || lastDate(plant, type) != null;
 
-export const isDoneToday = (
-  done: DoneMap,
-  id: number,
-  type: ActionType,
-): boolean => !!done[doneKey(id, type)];
+export const isDoneToday = (plant: Plant, type: ActionType, today: string): boolean =>
+  lastDate(plant, type) === today;
 
-export const lastOf = (p: Plant, type: ActionType): string | null =>
-  type === 'water' ? p.lastWater : p.lastFert;
-
-/** Next scheduled date for an action, or `null` when the action isn't tracked. */
-export const dueDate = (
-  species: readonly Species[],
-  p: Plant,
-  type: ActionType,
-): string | null => {
-  const iv = interval(species, p.species, type);
-  const last = lastOf(p, type);
-  if (iv == null || !last) return null;
-  return daysAdd(last, iv);
-};
-
-/** Is this action due (today or overdue) and not yet checked off today? */
-export const isDue = (
-  species: readonly Species[],
-  p: Plant,
-  type: ActionType,
-  done: DoneMap,
-  today: string = TODAY,
-): boolean => {
-  const due = dueDate(species, p, type);
-  return due != null && diffDays(due, today) <= 0 && !isDoneToday(done, p.id, type);
+export const isDue = (plant: Plant, type: ActionType, today: string): boolean => {
+  const next = nextDate(plant, type);
+  return next != null && diffDays(next, today) <= 0 && !isDoneToday(plant, type, today);
 };
 
 export interface RelLabel {
@@ -51,9 +24,9 @@ export interface RelLabel {
   today?: boolean;
 }
 
-/** Human-friendly relative label for a date against `today`. */
-export const relLabel = (date: string, today: string = TODAY): RelLabel => {
+export const relLabel = (date: string, today: string): RelLabel => {
   const n = diffDays(date, today);
+
   if (n < 0) {
     return { text: n === -1 ? 'wczoraj' : `${Math.abs(n)} dni temu`, overdue: true };
   }

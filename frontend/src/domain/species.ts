@@ -1,13 +1,5 @@
 import type { ActionType, Species } from '../types';
 
-/**
- * Pure helpers over the user's own species catalogue (state, not a static
- * import) — a species is user-defined, private, and flat.
- */
-
-export const DEFAULT_EMOJI = '🌱';
-
-/** Rotating avatar backgrounds, indexed deterministically by plant id. */
 export const AVATARS = [
   '#cdeccd',
   '#ffe0a8',
@@ -17,26 +9,28 @@ export const AVATARS = [
   '#d7f0c2',
 ] as const;
 
-export const avatarBg = (id: number): string =>
-  AVATARS[(id - 1) % AVATARS.length];
-
-export const findSpecies = (
-  list: readonly Species[],
-  name: string | null,
-): Species | undefined => (name ? list.find((s) => s.name === name) : undefined);
-
-/** Care interval (days) for a plant's species, or `null` if not tracked. */
-export const interval = (
-  list: readonly Species[],
-  name: string | null,
-  type: ActionType,
-): number | null => {
-  const sp = findSpecies(list, name);
-  if (!sp) return null;
-  return type === 'water' ? sp.w : sp.f;
+const hash = (value: string): number => {
+  let result = 0;
+  for (let i = 0; i < value.length; i++) {
+    result = (result * 31 + value.charCodeAt(i)) >>> 0;
+  }
+  return result;
 };
 
-export const emojiForSpecies = (
+export const avatarBg = (id: string): string => AVATARS[hash(id) % AVATARS.length];
+
+export const findSpecies = (list: readonly Species[], id: string): Species | undefined =>
+  list.find((s) => s.id === id);
+
+export const speciesName = (list: readonly Species[], id: string): string =>
+  findSpecies(list, id)?.name ?? 'Nieznany gatunek';
+
+export const interval = (
   list: readonly Species[],
-  name: string | null,
-): string => findSpecies(list, name)?.emoji ?? DEFAULT_EMOJI;
+  id: string,
+  type: ActionType,
+): number | null => {
+  const species = findSpecies(list, id);
+  if (!species) return null;
+  return type === 'water' ? species.w : species.f;
+};

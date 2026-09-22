@@ -1,3 +1,4 @@
+using Grow.Domain.Plants;
 using Grow.WebApi.Endpoints;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -68,6 +69,16 @@ public abstract class IntegrationTestBase
 
         var result = await response.Content.ReadFromJsonAsync<CreatePlantResponse>();
         return result!.CreatedPlantId;
+    }
+
+    protected async Task<Guid> CreatePlantGroupAsync(string? name = null, GroupType type = GroupType.WorkGroup)
+    {
+        var request = new CreatePlantGroupRequest(name ?? $"group-{Guid.NewGuid()}", type);
+        var response = await this.client.PostAsJsonAsync("/api/plant-groups", request);
+        _ = response.EnsureSuccessStatusCode();
+
+        var result = await response.Content.ReadFromJsonAsync<CreatePlantGroupResponse>();
+        return result!.CreatedPlantGroupId;
     }
 
     protected async Task<Guid> CreateSpecieAsync(string? name = null)
