@@ -1,13 +1,13 @@
-import { useNavigate } from 'react-router-dom';
-import { useGarden } from '../../state/GardenContext';
-import { fmtLong, weekdayLong } from '../../utils/date';
-import { Avatar } from '../../components/ui/Avatar';
-import { CheckToggle } from '../../components/ui/CheckToggle';
-import { ACTION_META } from '../../domain/actions';
-import { plantPath } from '../../routes/paths';
-import { selectToday, type TodayRow } from './today.selectors';
-import type { ActionType } from '../../types';
-import styles from './TodayPage.module.css';
+import { useNavigate } from "react-router-dom";
+import { useGarden } from "../../state/GardenContext";
+import { fmtLong, weekdayLong } from "../../utils/date";
+import { Avatar } from "../../components/ui/Avatar";
+import { CheckToggle } from "../../components/ui/CheckToggle";
+import { ACTION_META } from "../../domain/actions";
+import { plantPath } from "../../routes/paths";
+import { selectToday, type TodayRow } from "./today.selectors";
+import type { ActionType } from "../../types";
+import styles from "./TodayPage.module.css";
 
 export const TodayPage = () => {
   const { species, groups, plants, today, isLoading, commitAction } = useGarden();
@@ -53,8 +53,8 @@ export const TodayPage = () => {
           <p className={styles.allDoneTitle}>Nic na dziś!</p>
           <p className={styles.allDoneSub}>
             {plants.length
-              ? 'Rośliny zadowolone. Do zobaczenia jutro.'
-              : 'Dodaj pierwszą roślinę, żeby zobaczyć tu harmonogram.'}
+              ? "Rośliny zadowolone. Do zobaczenia jutro."
+              : "Dodaj pierwszą roślinę, żeby zobaczyć tu harmonogram."}
           </p>
         </div>
       )}

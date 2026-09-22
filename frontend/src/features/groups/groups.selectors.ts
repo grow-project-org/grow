@@ -121,7 +121,7 @@ const buildCard = (
     memberSub: `${members.length} roślin`,
     actions,
     allClear: totalDue === 0,
-    clearLabel: members.length ? 'Wszystko na dziś ogarnięte' : 'Pusta grupa',
+    clearLabel: members.length ? 'Wszystko na dziś zrobione' : 'Pusta grupa',
     regionWaterDue: water?.due ?? 0,
     regionFertDue: fert?.due ?? 0,
     showWarning: group.type !== 'region' && actions.some((a) => a.mixedInterval),
