@@ -8,7 +8,7 @@ using Moq;
 namespace Grow.Tests.Unit.Domain.Plants.Handlers;
 
 [TestFixture]
-public class SearchPlantsCommandHandlerTests
+public class SearchPlantsQueryHandlerTests
 {
     public static Mock<IDatabaseContext> CreateContextMock(Plant[] plants, Specie[] species)
     {
@@ -39,8 +39,8 @@ public class SearchPlantsCommandHandlerTests
 
         var userSessionProviderMock = CreateUserSessionProviderMock(ownerId);
 
-        var handler = new SearchPlantsCommandHandler(ctxMock.Object, userSessionProviderMock.Object);
-        var command = new SearchPlantsCommand("monstera");
+        var handler = new SearchPlantsQueryHandler(ctxMock.Object, userSessionProviderMock.Object);
+        var command = new SearchPlantsQuery("monstera");
 
         var result = await handler.HandleAsync(command, CancellationToken.None);
 
@@ -65,8 +65,8 @@ public class SearchPlantsCommandHandlerTests
 
         var userSessionProviderMock = CreateUserSessionProviderMock(ownerId);
 
-        var handler = new SearchPlantsCommandHandler(ctxMock.Object, userSessionProviderMock.Object);
-        var command = new SearchPlantsCommand("Bisseta");
+        var handler = new SearchPlantsQueryHandler(ctxMock.Object, userSessionProviderMock.Object);
+        var command = new SearchPlantsQuery("Bisseta");
 
         var result = await handler.HandleAsync(command, CancellationToken.None);
 
@@ -91,8 +91,8 @@ public class SearchPlantsCommandHandlerTests
 
         var userSessionProviderMock = CreateUserSessionProviderMock(ownerId);
 
-        var handler = new SearchPlantsCommandHandler(ctxMock.Object, userSessionProviderMock.Object);
-        var command = new SearchPlantsCommand(null);
+        var handler = new SearchPlantsQueryHandler(ctxMock.Object, userSessionProviderMock.Object);
+        var command = new SearchPlantsQuery(null);
 
         var result = await handler.HandleAsync(command, CancellationToken.None);
 
@@ -118,8 +118,8 @@ public class SearchPlantsCommandHandlerTests
 
         var userSessionProviderMock = CreateUserSessionProviderMock(ownerId);
 
-        var handler = new SearchPlantsCommandHandler(ctxMock.Object, userSessionProviderMock.Object);
-        var command = new SearchPlantsCommand("cactus");
+        var handler = new SearchPlantsQueryHandler(ctxMock.Object, userSessionProviderMock.Object);
+        var command = new SearchPlantsQuery("cactus");
 
         var result = await handler.HandleAsync(command, CancellationToken.None);
 
@@ -145,8 +145,8 @@ public class SearchPlantsCommandHandlerTests
 
         var userSessionProviderMock = CreateUserSessionProviderMock(ownerOneId);
 
-        var handler = new SearchPlantsCommandHandler(ctxMock.Object, userSessionProviderMock.Object);
-        var command = new SearchPlantsCommand("bambus");
+        var handler = new SearchPlantsQueryHandler(ctxMock.Object, userSessionProviderMock.Object);
+        var command = new SearchPlantsQuery("bambus");
 
         var result = await handler.HandleAsync(command, CancellationToken.None);
 

@@ -4,12 +4,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Grow.Domain.Plants.Handlers;
 
-public record SearchPlantsCommand(string? SearchText) : IQuery<SearchPlantsCommandResult>;
-public record SearchPlantsCommandResult(IEnumerable<Plant> Plants);
+public record SearchPlantsQuery(string? SearchText) : IQuery<SearchPlantsQueryResult>;
+public record SearchPlantsQueryResult(IEnumerable<Plant> Plants);
 
-public class SearchPlantsCommandHandler(IDatabaseContext databaseContext, IAuthUserSessionProvider userSessionProvider) : IQueryHandler<SearchPlantsCommand, SearchPlantsCommandResult>
+public class SearchPlantsQueryHandler(IDatabaseContext databaseContext, IAuthUserSessionProvider userSessionProvider) : IQueryHandler<SearchPlantsQuery, SearchPlantsQueryResult>
 {
-    public async Task<SearchPlantsCommandResult> HandleAsync(SearchPlantsCommand query, CancellationToken ct)
+    public async Task<SearchPlantsQueryResult> HandleAsync(SearchPlantsQuery query, CancellationToken ct)
     {
         var user = userSessionProvider.Get();
         var plantsQuery = databaseContext.Plants.Where(x => x.OwnerId == user.Id);
@@ -23,6 +23,6 @@ public class SearchPlantsCommandHandler(IDatabaseContext databaseContext, IAuthU
 
         var plants = await plantsQuery.ToArrayAsync(ct);
 
-        return new SearchPlantsCommandResult(plants);
+        return new SearchPlantsQueryResult(plants);
     }
 }
