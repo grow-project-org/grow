@@ -1,0 +1,63 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 2px solid var(--color-divider);
+  border-radius: 999px;
+  background: var(--color-card);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.chipBackdated {
+  border-color: var(--color-overdue-border);
+  background: var(--color-overdue-bg);
+  color: var(--color-overdue-ink);
+}
+
+.banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 10px 0 14px;
+  padding: 11px 13px;
+  border: 2px solid var(--color-overdue-border);
+  border-radius: 14px;
+  background: var(--color-overdue-bg);
+}
+
+.bannerIcon {
+  font-size: 17px;
+  line-height: 1.2;
+}
+
+.bannerText {
+  flex: 1;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-overdue-ink);
+}
+
+.bannerTitle {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.bannerReset {
+  align-self: center;
+  padding: 6px 10px;
+  border: 2px solid var(--color-overdue-ink);
+  border-radius: 10px;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-overdue-ink);
+  white-space: nowrap;
+  cursor: pointer;
+}

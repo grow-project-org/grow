@@ -1,12 +1,15 @@
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useGarden } from '../../state/GardenContext';
+import { useCareDate } from '../../state/CareDateContext';
 import { useToast } from '../../state/ToastContext';
 import { interval } from '../../domain/species';
 import { ACTION_META } from '../../domain/actions';
 import { isDoneToday } from '../../domain/schedule';
 import { ROUTES } from '../../routes/paths';
+import { fmtLong } from '../../utils/date';
 import { IconButton } from '../../components/ui/IconButton';
 import { ChevronLeftIcon } from '../../components/ui/icons';
+import { CareDateBanner, CareDateChip } from '../../components/ui/CareDateBar';
 import { selectProfile } from './profile.selectors';
 import type { ActionType } from '../../types';
 import styles from './PlantProfilePage.module.css';
@@ -15,6 +18,7 @@ export const PlantProfilePage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { plantById, groups, species, today, isLoading, commitAction } = useGarden();
+  const { careDate, isBackdated } = useCareDate();
   const { flash } = useToast();
 
   const plant = id ? plantById(id) : undefined;
@@ -31,11 +35,18 @@ export const PlantProfilePage = () => {
       flash(`Ten gatunek nie ma ustawionego interwału: ${ACTION_META[type].label.toLowerCase()}`);
       return;
     }
-    if (isDoneToday(plant, type, today)) {
+    if (!isBackdated && isDoneToday(plant, type, today)) {
       flash('Już odhaczone dzisiaj');
       return;
     }
-    void commitAction([plant.id], type, `${ACTION_META[type].emoji} ${ACTION_META[type].doneLabel} ${plant.code}`);
+
+    const when = isBackdated ? ` (${fmtLong(careDate)})` : '';
+    void commitAction(
+      [plant.id],
+      type,
+      `${ACTION_META[type].emoji} ${ACTION_META[type].doneLabel} ${plant.code}${when}`,
+      careDate,
+    );
   };
 
   return (
@@ -60,6 +71,13 @@ export const PlantProfilePage = () => {
             </span>
           ))}
         </div>
+
+        <div className={styles.careDateRow}>
+          <span className={styles.careDateLabel}>Data zabiegu</span>
+          <CareDateChip />
+        </div>
+
+        <CareDateBanner />
 
         <div className={styles.quick}>
           <button

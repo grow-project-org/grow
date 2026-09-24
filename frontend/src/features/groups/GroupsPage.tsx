@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import type { GroupType } from '../../types';
 import { useGarden } from '../../state/GardenContext';
+import { useCareDate } from '../../state/CareDateContext';
 import { CheckIcon, PlusIcon } from '../../components/ui/icons';
 import { CheckToggle } from '../../components/ui/CheckToggle';
+import { CareDateBanner, CareDateChip } from '../../components/ui/CareDateBar';
 import { AddGroupSheet } from './AddGroupSheet';
 import { PlantPickerSheet } from './PlantPickerSheet';
 import { selectGroups, type GroupAction } from './groups.selectors';
@@ -12,6 +14,7 @@ type Sheet = { kind: 'picker'; groupId: string } | { kind: 'addGroup' } | null;
 
 export const GroupsPage = () => {
   const garden = useGarden();
+  const { careDate, isBackdated } = useCareDate();
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [sheet, setSheet] = useState<Sheet>(null);
 
@@ -22,17 +25,22 @@ export const GroupsPage = () => {
   const toggleExpand = (key: string) => setExpanded((cur) => ({ ...cur, [key]: !cur[key] }));
 
   const runAction = (action: GroupAction, ids: string[], message: string) =>
-    void garden.commitAction(ids, action.type, message);
+    void garden.commitAction(ids, action.type, message, careDate);
 
   return (
     <div className={styles.page}>
       <header className={styles.header}>
         <h1 className={styles.heading}>Grupy</h1>
-        <button type="button" className={styles.newBtn} onClick={() => setSheet({ kind: 'addGroup' })}>
-          <PlusIcon size={14} />
-          Nowa
-        </button>
+        <div className={styles.headerActions}>
+          <CareDateChip />
+          <button type="button" className={styles.newBtn} onClick={() => setSheet({ kind: 'addGroup' })}>
+            <PlusIcon size={14} />
+            Nowa
+          </button>
+        </div>
       </header>
+
+      <CareDateBanner />
 
       <div className={styles.list}>
         {cards.map((card) => (
@@ -150,8 +158,8 @@ export const GroupsPage = () => {
                             </div>
                             <span className={styles.rowState}>{row.stateLabel}</span>
                             <CheckToggle
-                              checked={row.done}
-                              disabled={row.done}
+                              checked={row.done && !isBackdated}
+                              disabled={row.done && !isBackdated}
                               onClick={() =>
                                 runAction(action, [row.id], `${action.emoji} ${action.verb} ${row.name}`)
                               }
