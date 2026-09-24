@@ -1,8 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import { useGarden } from "../../state/GardenContext";
+import { useCareDate } from "../../state/CareDateContext";
 import { fmtLong, weekdayLong } from "../../utils/date";
 import { Avatar } from "../../components/ui/Avatar";
 import { CheckToggle } from "../../components/ui/CheckToggle";
+import { CareDateBanner, CareDateChip } from "../../components/ui/CareDateBar";
 import { ACTION_META } from "../../domain/actions";
 import { plantPath } from "../../routes/paths";
 import { selectToday, type TodayRow } from "./today.selectors";
@@ -11,11 +13,14 @@ import styles from "./TodayPage.module.css";
 
 export const TodayPage = () => {
   const { species, groups, plants, today, isLoading, commitAction } = useGarden();
+  const { careDate, isBackdated } = useCareDate();
   const navigate = useNavigate();
   const { summary, sections, left, allDone } = selectToday(species, groups, plants, today);
 
-  const check = (id: string, type: ActionType) =>
-    void commitAction([id], type, `${ACTION_META[type].doneLabel} 1 roślinę`);
+  const check = (id: string, type: ActionType) => {
+    const when = isBackdated ? ` (${fmtLong(careDate)})` : "";
+    void commitAction([id], type, `${ACTION_META[type].doneLabel} 1 roślinę${when}`, careDate);
+  };
 
   return (
     <div className={styles.page}>
@@ -24,11 +29,16 @@ export const TodayPage = () => {
           <p className={styles.date}>{`${weekdayLong(today)}, ${fmtLong(today)}`}</p>
           <h1 className={styles.greeting}>Dzień dobry 🌱</h1>
         </div>
-        <div className={styles.counter}>
-          <span className={styles.counterNum}>{left}</span>
-          <span className={styles.counterLabel}>DO ZROB.</span>
+        <div className={styles.headRight}>
+          <div className={styles.counter}>
+            <span className={styles.counterNum}>{left}</span>
+            <span className={styles.counterLabel}>DO ZROB.</span>
+          </div>
+          <CareDateChip />
         </div>
       </header>
+
+      <CareDateBanner />
 
       <div className={styles.summary}>
         <div className={`${styles.summaryStat} ${styles.summaryWater}`}>
@@ -71,6 +81,7 @@ export const TodayPage = () => {
               <TaskRow
                 key={row.id}
                 row={row}
+                backdated={isBackdated}
                 onOpen={() => navigate(plantPath(row.id))}
                 onCheck={() => check(row.id, section.type)}
               />
@@ -84,11 +95,12 @@ export const TodayPage = () => {
 
 interface TaskRowProps {
   row: TodayRow;
+  backdated: boolean;
   onOpen: () => void;
   onCheck: () => void;
 }
 
-const TaskRow = ({ row, onOpen, onCheck }: TaskRowProps) => (
+const TaskRow = ({ row, backdated, onOpen, onCheck }: TaskRowProps) => (
   <li className={styles.row}>
     <button type="button" className={styles.rowMain} onClick={onOpen}>
       <Avatar label={row.initial} bg={row.avatarBg} size={44} radius={13} />
@@ -100,6 +112,6 @@ const TaskRow = ({ row, onOpen, onCheck }: TaskRowProps) => (
         <span className={styles.rowSub}>{row.sub}</span>
       </span>
     </button>
-    <CheckToggle checked={row.done} disabled={row.done} onClick={onCheck} />
+    <CheckToggle checked={row.done && !backdated} disabled={row.done && !backdated} onClick={onCheck} />
   </li>
 );

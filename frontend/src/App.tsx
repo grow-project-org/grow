@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { ToastProvider } from './state/ToastContext';
 import { AuthProvider, useAuth } from './state/AuthContext';
 import { GardenProvider } from './state/GardenContext';
+import { CareDateProvider } from './state/CareDateContext';
 import { AppShell } from './components/layout/AppShell';
 import { PhoneFrame } from './components/layout/PhoneFrame';
 import { Toast } from './components/feedback/Toast';
@@ -39,17 +40,19 @@ const Gate = () => {
 
   return (
     <GardenProvider>
-      <Routes>
-        <Route element={<AppShell />}>
-          <Route path={ROUTES.today} element={<TodayPage />} />
-          <Route path={ROUTES.plants} element={<PlantsPage />} />
-          <Route path={ROUTES.plant} element={<PlantProfilePage />} />
-          <Route path={ROUTES.add} element={<AddPlantPage />} />
-          <Route path={ROUTES.calendar} element={<CalendarPage />} />
-          <Route path={ROUTES.groups} element={<GroupsPage />} />
-          <Route path="*" element={<Navigate to={ROUTES.today} replace />} />
-        </Route>
-      </Routes>
+      <CareDateProvider>
+        <Routes>
+          <Route element={<AppShell />}>
+            <Route path={ROUTES.today} element={<TodayPage />} />
+            <Route path={ROUTES.plants} element={<PlantsPage />} />
+            <Route path={ROUTES.plant} element={<PlantProfilePage />} />
+            <Route path={ROUTES.add} element={<AddPlantPage />} />
+            <Route path={ROUTES.calendar} element={<CalendarPage />} />
+            <Route path={ROUTES.groups} element={<GroupsPage />} />
+            <Route path="*" element={<Navigate to={ROUTES.today} replace />} />
+          </Route>
+        </Routes>
+      </CareDateProvider>
     </GardenProvider>
   );
 };

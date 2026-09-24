@@ -31,7 +31,12 @@ export interface GardenApi {
   isLoading: boolean;
   isSyncing: boolean;
   plantById: (id: string) => Plant | undefined;
-  commitAction: (plantIds: string[], type: ActionType, message?: string) => Promise<void>;
+  commitAction: (
+    plantIds: string[],
+    type: ActionType,
+    message?: string,
+    executedOn?: string,
+  ) => Promise<void>;
   addPlant: (input: AddPlantInput) => Promise<void>;
   addSpecies: (input: AddSpeciesInput) => Promise<void>;
   addGroup: (name: string, type: GroupType) => Promise<void>;
@@ -80,10 +85,10 @@ export const GardenProvider = ({ children }: { children: ReactNode }) => {
   const plantById = useCallback((id: string) => plants.find((p) => p.id === id), [plants]);
 
   const commitAction = useCallback(
-    async (plantIds: string[], type: ActionType, message?: string) => {
+    async (plantIds: string[], type: ActionType, message?: string, executedOn?: string) => {
       if (!plantIds.length) return;
 
-      const executedAt = `${today}T00:00:00.000Z`;
+      const executedAt = `${executedOn ?? today}T00:00:00.000Z`;
       await Promise.all(
         plantIds.map((id) => plantsApi.addEvent(id, ACTION_API_TYPE[type], executedAt)),
       );

@@ -1,0 +1,64 @@
+.quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.option {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  border: 2px solid var(--color-divider);
+  border-radius: 12px;
+  background: var(--color-card);
+  font: inherit;
+  text-align: left;
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.optionActive {
+  border-color: var(--color-green);
+  background: var(--color-green-tint);
+}
+
+.optionLabel {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.optionDate {
+  font-size: 11px;
+  color: var(--color-muted);
+}
+
+.customLabel {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-ink-soft);
+}
+
+.input {
+  width: 100%;
+  padding: 11px 12px;
+  border: 2px solid var(--color-divider);
+  border-radius: 12px;
+  background: var(--color-card);
+  font: inherit;
+  font-size: 15px;
+  color: var(--color-ink);
+}
+
+.note {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--color-overdue-bg);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-overdue-ink);
+}
