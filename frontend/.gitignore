@@ -5,6 +5,8 @@ dist-ssr
 .vite
 .DS_Store
 *.log
+.yarn/
+.yarnrc.yml
 
 # TypeScript incremental build cache (tsc -b) — regenerated on every build.
 *.tsbuildinfo
