@@ -20,11 +20,11 @@ export const CalendarPage = () => {
       <div className={styles.calendar}>
         <div className={styles.monthBar}>
           <button type="button" className={styles.monthNav} onClick={() => setSelected(view.prevMonth)} aria-label="Poprzedni miesiąc">
-            ‹
+            <span>‹</span>
           </button>
           <div className={styles.monthTitle}>{view.title}</div>
           <button type="button" className={styles.monthNav} onClick={() => setSelected(view.nextMonth)} aria-label="Następny miesiąc">
-            ›
+            <span>›</span>
           </button>
         </div>
 

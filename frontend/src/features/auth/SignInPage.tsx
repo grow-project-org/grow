@@ -58,7 +58,7 @@ export const SignInPage = () => {
             <TextField name="username" label="Nazwa użytkownika" requiredMark placeholder="np. Kasia" />
             <div className={styles.actions}>
               <Button type="submit" block disabled={isSubmitting}>
-                {isSubmitting ? 'Logowanie…' : 'Zaloguj / utwórz konto'}
+                {isSubmitting ? 'Logowanie…' : 'Zaloguj się / utwórz konto'}
               </Button>
             </div>
           </Form>
