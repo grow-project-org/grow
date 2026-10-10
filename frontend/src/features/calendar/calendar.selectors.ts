@@ -92,7 +92,7 @@ export const selectCalendar = (
   }
 
   const selectedEvents: CalEvent[] = (events.get(selected) ?? []).map(({ plant, type }) => {
-    const name = speciesName(species, plant.specieId);
+    const name = plant.code;
     return {
       id: plant.id,
       name,
